@@ -15,6 +15,12 @@ Styles from Twitter Bootstrap
   display: none;
 }
 
+a[href="edit.php?post_type=maxgallery&page=mg-admin-notice"],
+a[href="edit.php?post_type=maxgallery&page=mg-review-notice"],
+a[href="edit.php?post_type=maxgallery&page=mg-review-later"] {
+    display: none;
+}
+
 .maxgalleria-meta .ui-widget-header {
 	background: #fff;
 	border-top: 0 none;

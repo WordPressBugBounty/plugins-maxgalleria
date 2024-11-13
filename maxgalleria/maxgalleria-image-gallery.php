@@ -114,15 +114,34 @@ class MaxGalleriaImageGallery {
 			for ($i = 0; $i < $count; $i++) {
 				$url = trim(sanitize_url($_POST['url'][$i]));
 
-				// Parse the host from the URL
-				$url_host = wp_parse_url($url, PHP_URL_HOST);
-				// Parse the host from the site URL
-				$site_url_host = wp_parse_url(site_url(), PHP_URL_HOST);
+        // code for preventing use of external media in galleries
+        // skip if using media library folders pro s3
+        $plugin_dir_path = WP_PLUGIN_DIR . '/media-library-folders-pro-s3-addon/media-library-folders-pro-s3-addon.php';
+        // Parse the host from the URL
+        $url_host = wp_parse_url($url, PHP_URL_HOST);
+        // Parse the host from the site URL
+        $site_url_host = wp_parse_url(site_url(), PHP_URL_HOST);
+        
+				if (file_exists($plugin_dir_path)) {
+          
+          global $maxgalleria_media_library_pro_s3;
+          $region = get_option("mlfp-s3-region", "us-east-1");
+          
+          if(isset($maxgalleria_media_library_pro_s3->bucket)) {
 
-				// Check if the URL is not from the current website
-				if ($url_host !== $site_url_host) {
-					continue; // Skip to the next item
-				}
+            $bucket_url = $this->removeProtocol($this->getS3BucketUrl($maxgalleria_media_library_pro_s3->bucket, $region));
+                    
+            // Check if the URL is not from the current website or s3 bucket
+            if($url_host != $bucket_url && $url_host != $site_url_host) {
+              continue; // Skip to the next item
+            }
+          }
+        } else {
+          // Check if the URL is not from the current website
+          if ($url_host !== $site_url_host) {
+            continue; // Skip to the next item
+          }          
+        }				
 
 				$title = trim(sanitize_title($_POST['title'][$i]));
 				$caption = trim(wp_filter_post_kses($_POST['caption'][$i]));
@@ -167,7 +186,35 @@ class MaxGalleriaImageGallery {
 			die();
 		}
 	}
+  
+  public function removeProtocol($url) {
+    // Parse the URL to get its components
+    $parsedUrl = parse_url($url);
     
+    // Check if the URL parsing was successful and the host is set
+    if ($parsedUrl !== false && isset($parsedUrl['host'])) {
+        // Build the URL without the protocol
+        $host = $parsedUrl['host'];
+        $path = isset($parsedUrl['path']) ? $parsedUrl['path'] : '';
+        return $host . $path;
+    }
+
+    // If the URL parsing fails, return the original URL
+    return $url;
+  }  
+  
+  public function getS3BucketUrl($bucketName, $region) {
+    // Check if the region is 'us-east-1' (also known as the Northern Virginia region)
+    if ($region === 'us-east-1') {
+        $url = "https://{$bucketName}.s3.amazonaws.com/";
+    } else {
+        $url = "https://{$bucketName}.s3.{$region}.amazonaws.com/";
+    }
+    
+    // Remove any trailing slash from the URL
+    return rtrim($url, '/');
+  }
+      
   // check if the image is already an attachment and get the attachment ID;
   public function check_for_duplicate_attachment($image_url) {
     global $wpdb;
