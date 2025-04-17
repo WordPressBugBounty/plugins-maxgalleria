@@ -13,11 +13,11 @@ class MaxGalleriaCommon {
 			return 'http://localhost/maxgalleria/api/api.php';
 		}
 		
-		return 'http://maxgalleria.com/api/api.php';
+		return 'https://maxgalleria.com/api/api.php';
 	}
 	
 	public function get_browser() {
-		// http://www.php.net/manual/en/function.get-browser.php#101125.
+		// https://www.php.net/manual/en/function.get-browser.php#101125.
 		// Cleaned up a bit, but overall it's the same.
 
 		$user_agent = sanitize_text_field($_SERVER['HTTP_USER_AGENT']);
@@ -102,7 +102,7 @@ class MaxGalleriaCommon {
 			return 'http://localhost/maxgalleria/shop/cart/';
 		}
 		
-		return 'http://maxgalleria.com/shop/cart/';
+		return 'https://maxgalleria.com/shop/cart/';
 	}
 	
 	public function get_next_menu_order($gallery_id) {

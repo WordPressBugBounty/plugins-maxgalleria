@@ -428,7 +428,7 @@ $options = new MaxGalleriaYoutubeOptions();
 if($options->get_developer_api_key_default() === '') {
   $diabled = "disabled";  
   echo wp_kses_post('<div class="maxgalleria-meta label-warning center-text">' . esc_html__('In order to access Youtube videos you are now required to obtain a Google Developer API Key. ', 'maxgalleria') . 
-       '<a href="http://maxgalleria.com/youtube-api-key/" target="_blank">' . esc_html__('Click here for more details', 'maxgalleria') . '.</a> ' .          
+       '<a href="https://maxgalleria.com/youtube-api-key/" target="_blank">' . esc_html__('Click here for more details', 'maxgalleria') . '.</a> ' .          
         esc_html__('If you have Google Developer API Key ', 'maxgalleria') .
        '<a href="' . esc_url(home_url() .'/wp-admin/edit.php?post_type=maxgallery&page=maxgalleria-settings&addon=maxgalleria-youtube') . '">' . esc_html__('click here', 'maxgalleria') . '</a>' .
          esc_html__(' to enter it into Youtube Settings.', 'maxgalleria') .
@@ -688,7 +688,7 @@ else
 
         <?php if ($video_addons_count < 1) { ?>
           <p><?php esc_html_e('You do not have any video addons installed.', 'maxgalleria') ?></p>
-          <p><?php printf(esc_html__('You can get video addons from the %sMaxGalleria website%s.', 'maxgalleria'), '<a href="http://maxgalleria.com/shop/category/addons/" target="_blank">', '</a>') ?></p>
+          <p><?php printf(esc_html__('You can get video addons from the %sMaxGalleria website%s.', 'maxgalleria'), '<a href="https://maxgalleria.com/shop/category/addons/" target="_blank">', '</a>') ?></p>
           <div class="actions">
             <div class="cancel">
               <input type="button" class="btn video-add-cancel-button" value="<?php esc_html_e('Close', 'maxgalleria') ?>" />

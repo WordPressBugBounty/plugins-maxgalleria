@@ -1,13 +1,13 @@
 <?php
 /*
 Plugin Name: MaxGalleria
-Plugin URI: http://maxgalleria.com
+Plugin URI: https://maxgalleria.com
 Description: The gallery platform for WordPress.
-Version: 6.4.7
+Version: 6.4.8
 Author: Max Foundry
-Author URI: http://maxfoundry.com
+Author URI: https://maxfoundry.com
 
-Copyright 2014-2022 Max Foundry, LLC (http://maxfoundry.com)
+Copyright 2014-2022 Max Foundry, LLC (https://maxfoundry.com)
 */
 
 class MaxGalleria {
@@ -602,7 +602,7 @@ class MaxGalleria {
 	
 	public function set_global_constants() {	
 		define('MAXGALLERIA_VERSION_KEY', 'maxgalleria_version');
-		define('MAXGALLERIA_VERSION_NUM', '6.4.7');
+		define('MAXGALLERIA_VERSION_NUM', '6.4.8');
 		define('MAXGALLERIA_PLUGIN_NAME', trim(dirname(plugin_basename(__FILE__)), '/'));
 		define('MAXGALLERIA_PLUGIN_DIR', WP_PLUGIN_DIR . '/' . MAXGALLERIA_PLUGIN_NAME);
 		define('MAXGALLERIA_PLUGIN_URL', rtrim(plugin_dir_url(__FILE__), '/'));
@@ -626,7 +626,7 @@ class MaxGalleria {
 		define('MG_META_NONCE', 'maxgalleria_meta_nonce');
     define('MG_WP_CONTENT_FOLDER_NAME', basename(WP_CONTENT_DIR));
 		
-		define('MG_EDD_SHOP_URL', 'http://maxgalleria.com/');		
+		define('MG_EDD_SHOP_URL', 'https://maxgalleria.com/');		
 		define('MAXGALLERIA_SETTING_SHOW_ADDON_PAGE', 'maxgalleria_setting_default_show_addons_page');
 		
 		if(!defined('MAXGALLERIA_MEDIA_LIBRARY_SRC_FIX'))
@@ -880,7 +880,7 @@ class MaxGalleria {
 	
 	public function thickbox_l10n_fix() {
 		// When combining scripts, localization is lost for thickbox.js, so we call this
-		// function to fix it. See http://wordpress.org/support/topic/plugin-affecting-photo-galleriessliders
+		// function to fix it. See https://wordpress.org/support/topic/plugin-affecting-photo-galleriessliders
 		// for more details.
 		echo '<script type="text/javascript">';
 		echo "var thickboxL10n = " . json_encode(array(

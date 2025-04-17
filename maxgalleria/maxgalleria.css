@@ -1350,7 +1350,7 @@ Meta Styles
 	display: none;
 }
 
-/* Toggle button styles borrowed from http://acidjs.wemakesites.net/css3-iphone-buttons.html */
+/* Toggle button styles borrowed from https://acidjs.wemakesites.net/css3-iphone-buttons.html */
 .maxgalleria-meta .toggle-buttons input[type="checkbox"] + div::after {
 	content: "No";
 }

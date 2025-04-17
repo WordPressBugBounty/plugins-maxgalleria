@@ -105,7 +105,7 @@ class MaxGalleriaYouTube {
 				// then we need to fall back to building the embed code manually
 				if (!$maxgalleria->common->string_contains_embeddable_element($embed_code)) {
 					$video_id = $this->get_video_id($video_url);
-					$embed_code = '<iframe src="http://www.youtube.com/embed/' . esc_attr($video_id) . '?feature=oembed" width="' . esc_attr($width) . '" height="' . esc_attr($height) . '" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
+					$embed_code = '<iframe src="https://www.youtube.com/embed/' . esc_attr($video_id) . '?feature=oembed" width="' . esc_attr($width) . '" height="' . esc_attr($height) . '" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
 				}
         
         //check for SSL on the server, iso change to https

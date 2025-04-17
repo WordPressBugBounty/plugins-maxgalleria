@@ -133,15 +133,15 @@ jQuery(document).ready(function() {
   </div>');
 	}	
   jQuery('.wrap h2').prepend(
-    '<div class="mg-logo"><div><a href="http://maxfoundry.com" target="_blank"><img src="' +
+    '<div class="mg-logo"><div><a href="https://maxfoundry.com" target="_blank"><img src="' +
     mg_promo.pluginurl +
-    '/images/max-foundry.png" alt="Max Foundry" /></a><br><a href="http://maxbuttons.com/?ref=mbpro" target="_blank">MaxButtons</a> and <a href="https://maxgalleria.com/downloads/media-library-plus-pro/?ref=mlppro" target="_blank">Media Library Folders Pro</a></div>\n\
+    '/images/max-foundry.png" alt="Max Foundry" /></a><br><a href="https://maxbuttons.com/?ref=mbpro" target="_blank">MaxButtons</a> and <a href="https://maxgalleria.com/downloads/media-library-plus-pro/?ref=mlppro" target="_blank">Media Library Folders Pro</a></div>\n\
     </div>'
   );
   jQuery('.wrap h1').prepend(
-    '<div class="mg-logo"><div><a href="http://maxfoundry.com" target="_blank"><img src="' +
+    '<div class="mg-logo"><div><a href="https://maxfoundry.com" target="_blank"><img src="' +
     mg_promo.pluginurl +
-    '/images/max-foundry.png" alt="Max Foundry" /></a><br><a href="http://maxbuttons.com/?ref=mbpro" target="_blank">MaxButtons</a> and <a href="https://maxgalleria.com/downloads/media-library-plus-pro/?ref=mlppro" target="_blank">Media Library Folders Pro</a></div>\n\
+    '/images/max-foundry.png" alt="Max Foundry" /></a><br><a href="https://maxbuttons.com/?ref=mbpro" target="_blank">MaxButtons</a> and <a href="https://maxgalleria.com/downloads/media-library-plus-pro/?ref=mlppro" target="_blank">Media Library Folders Pro</a></div>\n\
     </div>'
 		);
 	jQuery('.wrap h1.wp-heading-inline').css('display','inline');

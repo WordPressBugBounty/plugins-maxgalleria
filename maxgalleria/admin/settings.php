@@ -58,7 +58,7 @@ $addon = sanitize_text_field(isset($_GET['addon']) ? $_GET['addon'] : '');
 <div id="maxgalleria-admin">
 	<div class="wrap">
 		<div class="icon32">
-			<a href="http://maxgalleria.com" target="_blank"><img src="<?php echo esc_url(MAXGALLERIA_PLUGIN_URL .'/images/maxgalleria-icon-32.png" alt="MaxGalleria') ?>" /></a>
+			<a href="https://maxgalleria.com" target="_blank"><img src="<?php echo esc_url(MAXGALLERIA_PLUGIN_URL .'/images/maxgalleria-icon-32.png" alt="MaxGalleria') ?>" /></a>
 		</div>
 		
 		<h2 class="title"><?php esc_html_e('MaxGalleria: Settings', 'maxgalleria') ?></h2>

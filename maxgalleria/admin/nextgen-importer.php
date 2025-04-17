@@ -84,7 +84,7 @@ if ($nextgen->is_nextgen_installed()) {
 <div id="maxgalleria-admin">
 	<div class="wrap">
 		<div class="icon32">
-			<a href="http://maxgalleria.com" target="_blank"><img src="<?php echo esc_url(MAXGALLERIA_PLUGIN_URL .'/images/maxgalleria-icon-32.png') ?>" alt="MaxGalleria" /></a>
+			<a href="https://maxgalleria.com" target="_blank"><img src="<?php echo esc_url(MAXGALLERIA_PLUGIN_URL .'/images/maxgalleria-icon-32.png') ?>" alt="MaxGalleria" /></a>
 		</div>
 		
 		<h2 class="title"><?php esc_html_e('MaxGalleria: NextGEN Importer', 'maxgalleria') ?></h2>

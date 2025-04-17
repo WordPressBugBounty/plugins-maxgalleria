@@ -9,7 +9,7 @@ $browser = $common->get_browser();
 <div id="maxgalleria-admin">
 	<div class="wrap">
 		<div class="icon32">
-			<a href="http://maxgalleria.com" target="_blank"><img src="<?php echo esc_url(MAXGALLERIA_PLUGIN_URL .'/images/maxgalleria-icon-32.png') ?>" alt="MaxGalleria" /></a>
+			<a href="https://maxgalleria.com" target="_blank"><img src="<?php echo esc_url(MAXGALLERIA_PLUGIN_URL .'/images/maxgalleria-icon-32.png') ?>" alt="MaxGalleria" /></a>
 		</div>
 		
 		<h2 class="title"><?php esc_html_e('MaxGalleria: Support', 'maxgalleria') ?></h2>
@@ -18,7 +18,7 @@ $browser = $common->get_browser();
 		
 		<div class="section">
 			<div class="inside">
-				<h4 style="margin-top: 0px;"><?php printf(esc_html__('Support for the core plugin is handled through the %splugin repository%s.', 'maxgalleria'), '<a href="http://wordpress.org/support/plugin/maxgalleria" target="_blank">', '</a>') ?></h4>
+				<h4 style="margin-top: 0px;"><?php printf(esc_html__('Support for the core plugin is handled through the %splugin repository%s.', 'maxgalleria'), '<a href="https://wordpress.org/support/plugin/maxgalleria" target="_blank">', '</a>') ?></h4>
 				<h4><?php printf(esc_html__('Support for any of the addons are handled through the MaxGalleria %ssupport forums%s.', 'maxgalleria'), '<a href="https://maxgalleria.com/forums/" target="_blank">', '</a>') ?></h4>
 				<h4><?php esc_html_e('You may be asked to provide the information below to help troubleshoot your issue.', 'maxgalleria') ?></h4>
 				
