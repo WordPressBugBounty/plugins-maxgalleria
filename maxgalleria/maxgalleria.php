@@ -3,7 +3,7 @@
 Plugin Name: MaxGalleria
 Plugin URI: https://maxgalleria.com
 Description: The gallery platform for WordPress.
-Version: 6.4.8
+Version: 6.4.9
 Author: Max Foundry
 Author URI: https://maxfoundry.com
 
@@ -602,7 +602,7 @@ class MaxGalleria {
 	
 	public function set_global_constants() {	
 		define('MAXGALLERIA_VERSION_KEY', 'maxgalleria_version');
-		define('MAXGALLERIA_VERSION_NUM', '6.4.8');
+		define('MAXGALLERIA_VERSION_NUM', '6.4.9');
 		define('MAXGALLERIA_PLUGIN_NAME', trim(dirname(plugin_basename(__FILE__)), '/'));
 		define('MAXGALLERIA_PLUGIN_DIR', WP_PLUGIN_DIR . '/' . MAXGALLERIA_PLUGIN_NAME);
 		define('MAXGALLERIA_PLUGIN_URL', rtrim(plugin_dir_url(__FILE__), '/'));
