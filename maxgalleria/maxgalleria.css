@@ -2758,7 +2758,138 @@ ul#mg-media-sources li{
   text-decoration: none;
 }
 
+/* ===== styles for the WEBP callout ===== */
+.mg-pro-webp-callout{
+  /* — Theme tokens (tweak if needed to match your brand) — */
+  --mg-accent: #1e88e5;            /* brand blue */
+  --mg-accent-dark: #1565c0;
+  --mg-bg: #f6f9ff;                /* panel background */
+  --mg-text: #263238;              /* high-contrast slate */
+  --mg-border: #d5e3ff;            /* panel border */
+  --mg-card-radius: 10px;          /* matches feature cards */
+  --mg-card-shadow: 0 6px 18px rgba(0,0,0,.08); /* matches depth */
+  --mg-focus: #0d47a1;
 
+  position: relative;
+  margin: 16px 0 28px;
+  padding: 18px 22px;
+  background: var(--mg-bg);
+  color: var(--mg-text);
+  border: 1px solid var(--mg-border);
+  /*border-left: 4px solid var(--mg-accent);
+  border-radius: var(--mg-card-radius);*/
+  box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+  /*box-shadow: var(--mg-card-shadow);*/
+}
+
+/* Badge */
+.mg-pro-webp-badge{
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  background: linear-gradient(180deg, var(--mg-accent), var(--mg-accent-dark));
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .06em;
+  padding: 5px 9px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.15);
+}
+
+/* Title & paragraph */
+.mg-pro-webp-callout h3{
+  margin: 2px 0 6px;
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--mg-accent-dark);
+}
+.mg-pro-webp-callout p{
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  opacity: .95;
+}
+
+/* Bullets + CTA layout */
+.mg-pro-webp-actions{ display: block; }
+.mg-pro-webp-benefits{
+  margin: 0 0 14px 18px;
+  padding: 0;
+  font-size: 14.5px;
+}
+.mg-pro-webp-benefits li{ margin: 4px 0; }
+
+/* CTA button */
+.mg-pro-webp-cta{
+  display: inline-block;
+  text-decoration: none;
+  background: var(--mg-accent);
+  color: #fff;
+  padding: 9px 14px;
+  border-radius: 7px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(30,136,229,.22);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.mg-pro-webp-cta:hover{
+  background: var(--mg-accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(21,101,192,.26);
+}
+.mg-pro-webp-cta:focus{
+  outline: 2px solid var(--mg-focus);
+  outline-offset: 2px;
+}
+
+.row.mg-pro-wide{
+  max-width: 1148px !important; /* exact pixel match */
+  max-width: 70.3125rem;        /* rem equivalent at 16px root for consistency */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Ensure the callout fills the column and respects gutters */
+.mg-pro-webp-callout{ width: 100%; }
+
+.mg-pro-webp-actions {
+  display: block !important;
+}
+
+.mg-pro-webp-cta,
+.mg-pro-webp-cta:hover,
+.mg-pro-webp-cta:focus,
+.mg-pro-webp-cta:active {
+  color: #fff !important;          /* Force white text */
+  text-decoration: none !important;/* Prevent underline from link styles */
+}
+
+/* Desktop: place CTA beside list for tighter rhythm */
+@media (min-width: 860px){
+  .mg-pro-webp-actions{
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .mg-pro-webp-benefits{ margin-bottom: 0; }
+}
+
+/* Mobile polish */
+@media (max-width: 720px){
+  .mg-pro-webp-callout{
+    padding: 14px 14px 16px;
+    border-left-width: 3px;
+  }
+  .mg-pro-webp-callout h3{ font-size: 19px; }
+  .mg-pro-webp-badge{ top: -9px; left: 10px; }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce){
+  .mg-pro-webp-cta{ transition: none; }
+}
+
+/* end of callout CSS */
 
 
 @media (max-width: 718px) {

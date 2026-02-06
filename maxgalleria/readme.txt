@@ -2,8 +2,8 @@
 Contributors: maxfoundry, AlanP57, arcware, johnbhartley
 Tags: gallery plugin, gallery plugin, best responsive gallery, slick slider
 Requires at least: 3.9
-Tested up to: 6.8.2
-Stable tag: 6.4.9
+Tested up to: 6.9
+Stable tag: 6.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -175,6 +175,13 @@ MaxGalleria works seamlessly with the plugins [Media Library Folders](https://wo
 
 
 == Changelog ==
+= 6.5.1 =
+* Tested with Wordpress 6.9
+
+= 6.5.0 =
+* Modified the plugin to wait until WordPress finishes loading, so translations and widgets register without displaying notices
+* Updated the upgrade to pro page
+
 = 6.4.9 =
 * Updated the Upgrade to Pro page
 

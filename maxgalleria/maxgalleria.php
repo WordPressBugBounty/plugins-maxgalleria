@@ -3,7 +3,7 @@
 Plugin Name: MaxGalleria
 Plugin URI: https://maxgalleria.com
 Description: The gallery platform for WordPress.
-Version: 6.4.9
+Version: 6.5.1
 Author: Max Foundry
 Author URI: https://maxfoundry.com
 
@@ -32,11 +32,8 @@ class MaxGalleria {
 		
 		$this->set_global_constants();
 		$this->set_activation_hooks();
-		$this->initialize_properties();
 		$this->add_thumb_sizes();
 		$this->setup_hooks();
-		$this->register_media_sources();
-		$this->register_templates();
 	}
 	
 	function activate() {
@@ -448,6 +445,13 @@ class MaxGalleria {
 		global $submenu;
 		unset($submenu['edit.php?post_type=' . MAXGALLERIA_POST_TYPE][10]);
 	}
+
+	public function bootstrap() {
+		$this->load_textdomain();
+		$this->initialize_properties();
+		$this->register_media_sources();
+		$this->register_templates();
+	}
 	
 	public function initialize_properties() {
 		// The order doesn't really matter, except maxgallery-options.php must be included first so
@@ -602,7 +606,7 @@ class MaxGalleria {
 	
 	public function set_global_constants() {	
 		define('MAXGALLERIA_VERSION_KEY', 'maxgalleria_version');
-		define('MAXGALLERIA_VERSION_NUM', '6.4.9');
+		define('MAXGALLERIA_VERSION_NUM', '6.5.1');
 		define('MAXGALLERIA_PLUGIN_NAME', trim(dirname(plugin_basename(__FILE__)), '/'));
 		define('MAXGALLERIA_PLUGIN_DIR', WP_PLUGIN_DIR . '/' . MAXGALLERIA_PLUGIN_NAME);
 		define('MAXGALLERIA_PLUGIN_URL', rtrim(plugin_dir_url(__FILE__), '/'));
@@ -678,7 +682,7 @@ class MaxGalleria {
 	}
 	
 	public function setup_hooks() {
-		add_action('init', array($this, 'load_textdomain'));
+		add_action('init', array($this, 'bootstrap'), 0);
 		add_action('init', array($this, 'register_gallery_post_type'));
 		add_action('init', array($this, 'display_mg_admin_notice'));
 		add_filter('plugin_action_links', array($this, 'create_plugin_action_links'), 10, 2);

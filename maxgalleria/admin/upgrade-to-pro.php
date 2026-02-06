@@ -92,6 +92,32 @@
   
   <div id="mgpro-features"><?php esc_html_e('FEATURES', 'maxgalleria') ?></div>
   
+  <div class="row mg-pro-wide">
+    <div class="small-12 columns">      <section class="mg-pro-webp-callout" aria-labelledby="mg-webp-title">
+        <div class="mg-pro-webp-badge" aria-hidden="true">NEW</div>
+        <h3 id="mg-webp-title">Automatic WebP Conversion</h3>
+        <p>
+          MaxGalleria Pro now converts your uploaded <strong>JPG</strong> and <strong>PNG</strong>
+          images to the modern <strong>WebP</strong> format—automatically.
+        </p>
+
+        <div class="mg-pro-webp-actions">
+          <ul class="mg-pro-webp-benefits">
+            <li><strong>Faster pages:</strong> smaller files make galleries feel snappier.</li>
+            <li><strong>Same great quality:</strong> optimized without visible loss.</li>
+            <li><strong>Better SEO:</strong> speed improvements can help rankings.</li>
+          </ul>
+
+          <a class="mg-pro-webp-cta" href="https://maxgalleria.com/documentation/maxgalleria/quickstart/#mgp-auto-convert"
+             title="Learn how WebP auto-conversion works"
+             target="_blank">             
+            Learn more
+          </a>
+        </div>
+      </section>
+    </div>
+  </div>
+  
   <div class="row mgaddons">
     
     <div class="large-4 columns mg-addon-block">
