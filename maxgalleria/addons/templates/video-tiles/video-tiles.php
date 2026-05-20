@@ -19,27 +19,41 @@ class MaxGalleriaVideoTiles {
 		
 		require_once 'video-tiles-options.php';
 		
-		add_action('save_post', array($this, 'save_gallery_options'));
+		add_action('save_post', array($this, 'save_gallery_options'), 10, 2);
 		add_action('maxgalleria_template_options', array($this, 'show_template_options'));
 		add_action('wp_ajax_save_video_tiles_defaults', array($this, 'save_video_tiles_defaults'));
 		add_action('wp_ajax_nopriv_save_video_tiles_defaults', array($this, 'save_video_tiles_defaults'));
 	}
 	
-	public function save_gallery_options() {
-		global $post;
-
-		if (isset($post)) {
-			if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-				return $post->ID;
-			}
-
-			if (!current_user_can('edit_post', $post->ID)) {
-				return $post->ID;
-			}
-			
-			$options = new MaxGalleriaVideoTilesOptions($post->ID);
-			$options->save_options();
+	public function save_gallery_options($post_id, $post = null) {
+		if (!$this->can_save_gallery_options($post_id, $post)) {
+			return $post_id;
 		}
+
+		$options = new MaxGalleriaVideoTilesOptions($post_id);
+		$options->save_options();
+
+		return $post_id;
+	}
+			
+	private function can_save_gallery_options($post_id, $post = null) {
+		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+			return false;
+		}
+
+		if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) {
+			return false;
+		}
+
+		if ($post instanceof WP_Post && $post->post_type != MAXGALLERIA_POST_TYPE) {
+			return false;
+		}
+
+		if (!$post instanceof WP_Post && get_post_type($post_id) != MAXGALLERIA_POST_TYPE) {
+			return false;
+		}
+
+		return current_user_can('edit_post', $post_id);
 	}
 	
 	public function show_template_options() {

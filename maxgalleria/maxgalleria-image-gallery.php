@@ -801,9 +801,16 @@ class MaxGalleriaImageGallery {
 				global $maxgalleria_media_library_pro_s3;
 				$maxgalleria_media_library_pro_s3->check_and_fetch_file($file_path, $attachment->ID);
 			}
+
+			if (empty($file_path)) {
+				return array('url' => $image_src[0], 'width' => $image_src[1], 'height' => $image_src[2]);
+			}
 							
 			// Get the file info and extension
-			$file_info = pathinfo($file_path);
+			$file_info = array_merge(array('dirname' => '', 'filename' => '', 'extension' => ''), pathinfo($file_path));
+			if (empty($file_info['extension']) || empty($file_info['dirname']) || empty($file_info['filename'])) {
+				return array('url' => $image_src[0], 'width' => $image_src[1], 'height' => $image_src[2]);
+			}
 			$extension = '.' . $file_info['extension'];
 
 			// The image path without the extension

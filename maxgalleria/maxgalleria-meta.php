@@ -2,7 +2,7 @@
 class MaxGalleriaMeta {
 	public function __construct() {
 		add_action('add_meta_boxes', array($this, 'add_gallery_meta_boxes'));
-		add_action('save_post', array($this, 'save_gallery_options'));
+		add_action('save_post', array($this, 'save_gallery_options'), 10, 2);
 		
     add_action('wp_ajax_nopriv_mg_hide_template_ad', array($this, 'mg_hide_template_ad'));
     add_action('wp_ajax_mg_hide_template_ad', array($this, 'mg_hide_template_ad'));
@@ -83,21 +83,35 @@ class MaxGalleriaMeta {
 		add_meta_box($id, $title, $callback, $post_type, $context, $priority);
 	}
 	
-	public function save_gallery_options() {
-		global $post;
-
-		if (isset($post)) {
-			if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-				return $post->ID;
-			}
-
-			if (!current_user_can('edit_post', $post->ID)) {
-				return $post->ID;
-			}
-			
-			$options = new MaxGalleryOptions($post->ID);
-			$options->save_options();
+	public function save_gallery_options($post_id, $post = null) {
+		if (!$this->can_save_gallery_options($post_id, $post)) {
+			return $post_id;
 		}
+
+		$options = new MaxGalleryOptions($post_id);
+		$options->save_options();
+
+		return $post_id;
+	}
+			
+	private function can_save_gallery_options($post_id, $post = null) {
+		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+			return false;
+		}
+
+		if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) {
+			return false;
+		}
+
+		if ($post instanceof WP_Post && $post->post_type != MAXGALLERIA_POST_TYPE) {
+			return false;
+		}
+
+		if (!$post instanceof WP_Post && get_post_type($post_id) != MAXGALLERIA_POST_TYPE) {
+			return false;
+		}
+
+		return current_user_can('edit_post', $post_id);
 	}
 	
 	public function mg_hide_template_ad() {
