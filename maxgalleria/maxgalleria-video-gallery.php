@@ -57,37 +57,40 @@ class MaxGalleriaVideoGallery {
 	public function setup_hooks() {
 		// Ajax call to include a single video in a gallery
 		add_action('wp_ajax_include_single_video_in_gallery', array($this, 'include_single_video_in_gallery'));
-		add_action('wp_ajax_nopriv_include_single_video_in_gallery', array($this, 'include_single_video_in_gallery'));
 
 		// Ajax call to include bulk videos in a gallery
 		add_action('wp_ajax_include_bulk_videos_in_gallery', array($this, 'include_bulk_videos_in_gallery'));
-		add_action('wp_ajax_nopriv_include_bulk_videos_in_gallery', array($this, 'include_bulk_videos_in_gallery'));
 
 		// Ajax call to exclude a single video from a gallery
 		add_action('wp_ajax_exclude_single_video_from_gallery', array($this, 'exclude_single_video_from_gallery'));
-		add_action('wp_ajax_nopriv_exclude_single_video_from_gallery', array($this, 'exclude_single_video_from_gallery'));
 
 		// Ajax call to exclude bulk videos from a gallery
 		add_action('wp_ajax_exclude_bulk_videos_from_gallery', array($this, 'exclude_bulk_videos_from_gallery'));
-		add_action('wp_ajax_nopriv_exclude_bulk_videos_from_gallery', array($this, 'exclude_bulk_videos_from_gallery'));
 
 		// Ajax call to remove a single video from a gallery
 		add_action('wp_ajax_remove_single_video_from_gallery', array($this, 'remove_single_video_from_gallery'));
-		add_action('wp_ajax_nopriv_remove_single_video_from_gallery', array($this, 'remove_single_video_from_gallery'));
 		
 		// Ajax call to remove bulk videos from a gallery
 		add_action('wp_ajax_remove_bulk_videos_from_gallery', array($this, 'remove_bulk_videos_from_gallery'));
-		add_action('wp_ajax_nopriv_remove_bulk_videos_from_gallery', array($this, 'remove_bulk_videos_from_gallery'));
 
 		// Ajax call to reorder videos
 		add_action('wp_ajax_reorder_videos', array($this, 'reorder_videos'));
-		add_action('wp_ajax_nopriv_reorder_videos', array($this, 'reorder_videos'));
 		
 		// Adds wmode=transparent to videos
 		add_filter('embed_oembed_html', array($this, 'add_video_wmode_transparent'), 10, 3);
     add_filter('next_posts_link_attributes', array($this, 'posts_next_link_attributes'));
     add_filter('previous_posts_link_attributes', array($this, 'posts_previous_link_attributes'));    
     
+	}
+
+	private function can_edit_gallery_attachment($attachment_id, $gallery_id = 0) {
+		global $maxgalleria;
+
+		return isset($maxgalleria) && $maxgalleria->can_edit_gallery_attachment($attachment_id, $gallery_id);
+	}
+
+	private function permission_denied() {
+		wp_die(esc_html__('You do not have permission to edit this gallery media.', 'maxgalleria'), '', array('response' => 403));
 	}
 	
 	public function add_video_wmode_transparent($html = "", $url = "", $attr = "") {   
@@ -109,6 +112,10 @@ class MaxGalleriaVideoGallery {
 			if (isset($_POST['id'])) {			
 				$video_post = get_post(sanitize_text_field($_POST['id']));
 				if (isset($video_post)) {
+					if (!$this->can_edit_gallery_attachment($video_post->ID)) {
+						$this->permission_denied();
+					}
+
 					do_action(MAXGALLERIA_ACTION_BEFORE_INCLUDE_SINGLE_VIDEO_IN_GALLERY, $video_post);
 					delete_post_meta($video_post->ID, 'maxgallery_attachment_video_exclude', true);
 					do_action(MAXGALLERIA_ACTION_AFTER_INCLUDE_SINGLE_VIDEO_IN_GALLERY, $video_post);
@@ -135,6 +142,10 @@ class MaxGalleriaVideoGallery {
 					foreach ($_POST['media-id'] as $id) {
 						$video_post = get_post(sanitize_text_field($id));
 						if (isset($video_post)) {
+							if (!$this->can_edit_gallery_attachment($video_post->ID)) {
+								$this->permission_denied();
+							}
+
 							delete_post_meta($video_post->ID, 'maxgallery_attachment_video_exclude', true);
 							$count++;
 						}
@@ -164,6 +175,10 @@ class MaxGalleriaVideoGallery {
 			if (isset($_POST['id'])) {			
 				$video_post = get_post(sanitize_text_field($_POST['id']));
 				if (isset($video_post)) {
+					if (!$this->can_edit_gallery_attachment($video_post->ID)) {
+						$this->permission_denied();
+					}
+
 					do_action(MAXGALLERIA_ACTION_BEFORE_EXCLUDE_SINGLE_VIDEO_FROM_GALLERY, $video_post);
 					update_post_meta($video_post->ID, 'maxgallery_attachment_video_exclude', true);
 					do_action(MAXGALLERIA_ACTION_AFTER_EXCLUDE_SINGLE_VIDEO_FROM_GALLERY, $video_post);
@@ -190,6 +205,10 @@ class MaxGalleriaVideoGallery {
 					foreach ($_POST['media-id'] as $id) {
 						$video_post = get_post(sanitize_text_field($id));
 						if (isset($video_post)) {
+							if (!$this->can_edit_gallery_attachment($video_post->ID)) {
+								$this->permission_denied();
+							}
+
 							update_post_meta($video_post->ID, 'maxgallery_attachment_video_exclude', true);
 							$count++;
 						}
@@ -219,6 +238,10 @@ class MaxGalleriaVideoGallery {
 			if (isset($_POST['id'])) {			
 				$video_post = get_post(sanitize_text_field($_POST['id']));
 				if (isset($video_post)) {
+					if (!$this->can_edit_gallery_attachment($video_post->ID)) {
+						$this->permission_denied();
+					}
+
 					do_action(MAXGALLERIA_ACTION_BEFORE_REMOVE_SINGLE_VIDEO_FROM_GALLERY, $video_post);
 					
 					$temp = array();
@@ -250,6 +273,10 @@ class MaxGalleriaVideoGallery {
 					foreach ($_POST['media-id'] as $id) {
 						$video_post = get_post(sanitize_text_field($id));
 						if (isset($video_post)) {
+							if (!$this->can_edit_gallery_attachment($video_post->ID)) {
+								$this->permission_denied();
+							}
+
 							do_action(MAXGALLERIA_ACTION_BEFORE_REMOVE_SINGLE_VIDEO_FROM_GALLERY, $video_post);
 							
 							$temp = array();
@@ -293,6 +320,10 @@ class MaxGalleriaVideoGallery {
 					
 					$video_post = get_post($video_id);
 					if (isset($video_post)) {
+						if (!$this->can_edit_gallery_attachment($video_post->ID)) {
+							$this->permission_denied();
+						}
+
 						do_action(MAXGALLERIA_ACTION_BEFORE_REORDER_VIDEO_IN_GALLERY, $video_post);
 						
 						$temp = array();

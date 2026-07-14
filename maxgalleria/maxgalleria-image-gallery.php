@@ -57,39 +57,46 @@ class MaxGalleriaImageGallery {
 	public function setup_hooks() {
 		// Ajax call to add media library images to a gallery
 		add_action('wp_ajax_add_media_library_images_to_gallery', array($this, 'add_media_library_images_to_gallery'));
-		add_action('wp_ajax_nopriv_add_media_library_images_to_gallery', array($this, 'add_media_library_images_to_gallery'));
 		
 		// Ajax call to include a single image in a gallery
 		add_action('wp_ajax_include_single_image_in_gallery', array($this, 'include_single_image_in_gallery'));
-		add_action('wp_ajax_nopriv_include_single_image_in_gallery', array($this, 'include_single_image_in_gallery'));
 
 		// Ajax call to include bulk images in a gallery
 		add_action('wp_ajax_include_bulk_images_in_gallery', array($this, 'include_bulk_images_in_gallery'));
-		add_action('wp_ajax_nopriv_include_bulk_images_in_gallery', array($this, 'include_bulk_images_in_gallery'));
 
 		// Ajax call to exclude a single image from a gallery
 		add_action('wp_ajax_exclude_single_image_from_gallery', array($this, 'exclude_single_image_from_gallery'));
-		add_action('wp_ajax_nopriv_exclude_single_image_from_gallery', array($this, 'exclude_single_image_from_gallery'));
 
 		// Ajax call to exclude bulk images from a gallery
 		add_action('wp_ajax_exclude_bulk_images_from_gallery', array($this, 'exclude_bulk_images_from_gallery'));
-		add_action('wp_ajax_nopriv_exclude_bulk_images_from_gallery', array($this, 'exclude_bulk_images_from_gallery'));
 
 		// Ajax call to remove a single image from a gallery
 		add_action('wp_ajax_remove_single_image_from_gallery', array($this, 'remove_single_image_from_gallery'));
-		add_action('wp_ajax_nopriv_remove_single_image_from_gallery', array($this, 'remove_single_image_from_gallery'));
 		
 		// Ajax call to remove bulk images from a gallery
 		add_action('wp_ajax_remove_bulk_images_from_gallery', array($this, 'remove_bulk_images_from_gallery'));
-		add_action('wp_ajax_nopriv_remove_bulk_images_from_gallery', array($this, 'remove_bulk_images_from_gallery'));
 
 		// Ajax call to reorder images
 		add_action('wp_ajax_reorder_images', array($this, 'reorder_images'));
-		add_action('wp_ajax_nopriv_reorder_images', array($this, 'reorder_images'));
 		
 		add_action('wp_ajax_crop_image', array($this, 'crop_image'));
-		add_action('wp_ajax_nopriv_crop_image', array($this, 'crop_image'));		
         
+	}
+
+	private function can_edit_gallery($gallery_id) {
+		global $maxgalleria;
+
+		return isset($maxgalleria) && $maxgalleria->can_edit_maxgallery($gallery_id);
+	}
+
+	private function can_edit_gallery_attachment($attachment_id, $gallery_id = 0) {
+		global $maxgalleria;
+
+		return isset($maxgalleria) && $maxgalleria->can_edit_gallery_attachment($attachment_id, $gallery_id);
+	}
+
+	private function permission_denied() {
+		wp_die(esc_html__('You do not have permission to edit this gallery media.', 'maxgalleria'), '', array('response' => 403));
 	}
 	
 	public function add_media_library_images_to_gallery() {
@@ -106,6 +113,10 @@ class MaxGalleriaImageGallery {
 			$result = 0;
 			
       $gallery_id = trim(stripslashes(sanitize_text_field($_POST['gallery_id'])));
+
+      if (!$this->can_edit_gallery($gallery_id)) {
+        $this->permission_denied();
+      }
 			
       // using esc_url on $_POST['url'] generates an error because $_POST['url'] is an array
 			do_action(MAXGALLERIA_ACTION_BEFORE_ADD_IMAGES_TO_GALLERY, $gallery_id, $_POST['url']);
@@ -391,6 +402,10 @@ class MaxGalleriaImageGallery {
       //If the attachment doesn't have a post parent, simply change it to the attachment we're working with and be done with it      
       // assign a new value for menu_order
       if( empty( $attachment[ 'post_parent' ] ) ) {
+        if(!current_user_can('edit_post', $attachment['ID'])) {
+          return 0;
+        }
+
         wp_update_post(
           array(
             'ID' => $attachment[ 'ID' ],
@@ -466,6 +481,10 @@ class MaxGalleriaImageGallery {
 			if (isset($_POST['id'])) {
 				$image_post = get_post(sanitize_text_field($_POST['id']));
 				if (isset($image_post)) {
+					if (!$this->can_edit_gallery_attachment($image_post->ID)) {
+						$this->permission_denied();
+					}
+
 					do_action(MAXGALLERIA_ACTION_BEFORE_INCLUDE_SINGLE_IMAGE_IN_GALLERY, $image_post);
 					delete_post_meta($image_post->ID, 'maxgallery_attachment_image_exclude', true);
 					do_action(MAXGALLERIA_ACTION_AFTER_INCLUDE_SINGLE_IMAGE_IN_GALLERY, $image_post);
@@ -492,6 +511,10 @@ class MaxGalleriaImageGallery {
 					foreach ($_POST['media-id'] as $id) {
 						$image_post = get_post(sanitize_text_field($id));
 						if (isset($image_post)) {
+							if (!$this->can_edit_gallery_attachment($image_post->ID)) {
+								$this->permission_denied();
+							}
+
 							do_action(MAXGALLERIA_ACTION_BEFORE_INCLUDE_SINGLE_IMAGE_IN_GALLERY, $image_post);
 							delete_post_meta($image_post->ID, 'maxgallery_attachment_image_exclude', true);
 							do_action(MAXGALLERIA_ACTION_AFTER_INCLUDE_SINGLE_IMAGE_IN_GALLERY, $image_post);
@@ -524,6 +547,10 @@ class MaxGalleriaImageGallery {
 			if (isset($_POST['id'])) {			
 				$image_post = get_post(sanitize_text_field($_POST['id']));
 				if (isset($image_post)) {
+					if (!$this->can_edit_gallery_attachment($image_post->ID)) {
+						$this->permission_denied();
+					}
+
 					do_action(MAXGALLERIA_ACTION_BEFORE_EXCLUDE_SINGLE_IMAGE_FROM_GALLERY, $image_post);
 					update_post_meta($image_post->ID, 'maxgallery_attachment_image_exclude', true);
 					do_action(MAXGALLERIA_ACTION_AFTER_EXCLUDE_SINGLE_IMAGE_FROM_GALLERY, $image_post);
@@ -550,6 +577,10 @@ class MaxGalleriaImageGallery {
 					foreach ($_POST['media-id'] as $id) {
 						$image_post = get_post(sanitize_text_field($id));
 						if (isset($image_post)) {
+							if (!$this->can_edit_gallery_attachment($image_post->ID)) {
+								$this->permission_denied();
+							}
+
 							do_action(MAXGALLERIA_ACTION_BEFORE_EXCLUDE_SINGLE_IMAGE_FROM_GALLERY, $image_post);
 							update_post_meta($image_post->ID, 'maxgallery_attachment_image_exclude', true);
 							do_action(MAXGALLERIA_ACTION_AFTER_EXCLUDE_SINGLE_IMAGE_FROM_GALLERY, $image_post);
@@ -582,6 +613,10 @@ class MaxGalleriaImageGallery {
 			if (isset($_POST['id'])) {			
 				$image_post = get_post(sanitize_text_field($_POST['id']));
 				if (isset($image_post)) {
+					if (!$this->can_edit_gallery_attachment($image_post->ID)) {
+						$this->permission_denied();
+					}
+
 					do_action(MAXGALLERIA_ACTION_BEFORE_REMOVE_SINGLE_IMAGE_FROM_GALLERY, $image_post);
 					
 					$temp = array();
@@ -613,6 +648,10 @@ class MaxGalleriaImageGallery {
 					foreach ($_POST['media-id'] as $id) {
 						$image_post = get_post(sanitize_text_field($id));
 						if (isset($image_post)) {
+							if (!$this->can_edit_gallery_attachment($image_post->ID)) {
+								$this->permission_denied();
+							}
+
 							do_action(MAXGALLERIA_ACTION_BEFORE_REMOVE_SINGLE_IMAGE_FROM_GALLERY, $image_post);
 							
 							$temp = array();
@@ -656,6 +695,10 @@ class MaxGalleriaImageGallery {
 					
 					$image_post = get_post($image_id);
 					if (isset($image_post)) {
+						if (!$this->can_edit_gallery_attachment($image_post->ID)) {
+							$this->permission_denied();
+						}
+
 						do_action(MAXGALLERIA_ACTION_BEFORE_REORDER_IMAGE_IN_GALLERY, $image_post);
 						
 						$temp = array();
@@ -683,6 +726,11 @@ class MaxGalleriaImageGallery {
 		
 		if (isset($_POST) && check_admin_referer($this->nonce_crop_image['action'], $this->nonce_crop_image['name'])) {
 			$message = '';
+
+			$image_id = isset($_POST['postid']) ? absint($_POST['postid']) : 0;
+			if (!$this->can_edit_gallery_attachment($image_id)) {
+				$this->permission_denied();
+			}
 			
 			if (isset($_POST['postid'])) {			
 				wp_ajax_image_editor();

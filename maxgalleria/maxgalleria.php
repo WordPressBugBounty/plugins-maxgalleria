@@ -3,7 +3,7 @@
 Plugin Name: MaxGalleria
 Plugin URI: https://maxgalleria.com
 Description: The gallery platform for WordPress.
-Version: 6.5.2
+Version: 6.5.3
 Author: Max Foundry
 Author URI: https://maxfoundry.com
 
@@ -606,7 +606,7 @@ class MaxGalleria {
 	
 	public function set_global_constants() {	
 		define('MAXGALLERIA_VERSION_KEY', 'maxgalleria_version');
-		define('MAXGALLERIA_VERSION_NUM', '6.5.2');
+		define('MAXGALLERIA_VERSION_NUM', '6.5.3');
 		define('MAXGALLERIA_PLUGIN_NAME', trim(dirname(plugin_basename(__FILE__)), '/'));
 		define('MAXGALLERIA_PLUGIN_DIR', WP_PLUGIN_DIR . '/' . MAXGALLERIA_PLUGIN_NAME);
 		define('MAXGALLERIA_PLUGIN_URL', rtrim(plugin_dir_url(__FILE__), '/'));
@@ -703,8 +703,10 @@ class MaxGalleria {
 		add_action('widgets_init', array($this, 'register_widgets'));
 		add_action('after_switch_theme', array($this, 'copy_template'));
     
-    if(!defined('ATTACHMENT_QUERY_OFF') && !class_exists('eml') && !function_exists( 'wpuxss_get_eml_slug' ) )     
+    if(!defined('ATTACHMENT_QUERY_OFF')) {
+      add_filter('ajax_query_attachments_args', array($this, 'exclude_album_gallery_attachments_from_media_library'));
       add_action( 'pre_get_posts', array($this, 'modify_attachments'));
+    }
     
     //add_action( 'pre_get_posts', array($this, 'limit_contributor_access'));  
     
@@ -730,31 +732,22 @@ class MaxGalleria {
     
     add_filter('query_vars', array($this, 'mg_query_vars')); 
     
-    add_action('wp_ajax_nopriv_mg_get_image_info', array($this, 'mg_get_image_info'));
     add_action('wp_ajax_mg_get_image_info', array($this, 'mg_get_image_info'));		
         
-    add_action('wp_ajax_nopriv_mg_save_image_info', array($this, 'mg_save_image_info'));
     add_action('wp_ajax_mg_save_image_info', array($this, 'mg_save_image_info'));		
         
-    add_action('wp_ajax_nopriv_mg_display_bulk_edit', array($this, 'mg_display_bulk_edit'));
     add_action('wp_ajax_mg_display_bulk_edit', array($this, 'mg_display_bulk_edit'));		
         
-    add_action('wp_ajax_nopriv_mg_save_bulk_info', array($this, 'mg_save_bulk_info'));
     add_action('wp_ajax_mg_save_bulk_info', array($this, 'mg_save_bulk_info'));	
         
-    add_action('wp_ajax_nopriv_mg_get_video_info', array($this, 'mg_get_video_info'));
     add_action('wp_ajax_mg_get_video_info', array($this, 'mg_get_video_info'));	
         
-    add_action('wp_ajax_nopriv_mg_save_video_info', array($this, 'mg_save_video_info'));
     add_action('wp_ajax_mg_save_video_info', array($this, 'mg_save_video_info'));	
         
-    add_action('wp_ajax_nopriv_mg_display_bulk_video', array($this, 'mg_display_bulk_video'));
     add_action('wp_ajax_mg_display_bulk_video', array($this, 'mg_display_bulk_video'));		
     
-    add_action('wp_ajax_nopriv_mg_save_bulk_video', array($this, 'mg_save_bulk_video'));
     add_action('wp_ajax_mg_save_bulk_video', array($this, 'mg_save_bulk_video'));	
         
-    add_action('wp_ajax_nopriv_mg_add_videos', array($this, 'mg_add_videos'));
     add_action('wp_ajax_mg_add_videos', array($this, 'mg_add_videos'));	
     
     // added 'display' to the list of accepted styles used in wp_kses_post()
@@ -803,13 +796,143 @@ class MaxGalleria {
       remove_menu_page( 'edit.php?post_type=maxgallery' );
     endif;
   }
+
+  public function can_edit_maxgallery($post_id) {
+    $post_id = absint($post_id);
+
+    return $post_id
+      && get_post_type($post_id) === MAXGALLERIA_POST_TYPE
+      && current_user_can('edit_post', $post_id);
+  }
+
+  public function can_edit_gallery_attachment($attachment_id, $gallery_id = 0) {
+    $attachment = get_post(absint($attachment_id));
+
+    if (!$attachment || $attachment->post_type !== 'attachment') {
+      return false;
+    }
+
+    if (!current_user_can('edit_post', $attachment->ID)) {
+      return false;
+    }
+
+    $parent_id = $gallery_id ? absint($gallery_id) : absint($attachment->post_parent);
+
+    return $parent_id
+      && absint($attachment->post_parent) === $parent_id
+      && $this->can_edit_maxgallery($parent_id);
+  }
+
+  private function gallery_media_permission_denied() {
+    wp_die(esc_html__('You do not have permission to edit this gallery media.', 'maxgalleria'), '', array('response' => 403));
+  }
   
   public function modify_attachments( $query ) {
     
-    if ( is_admin() && strpos( $_SERVER[ 'REQUEST_URI' ], 'admin-ajax.php' ) !== false && $_REQUEST['action'] === 'query-attachments'  ) {      
-      add_filter( 'posts_groupby', array($this, 'group_attachments') );
+    if ( $this->is_media_library_attachment_request($query) ) {
+      if (!$this->media_library_folders_pro_is_filtering_media()) {
+        $query->set('meta_query', $this->get_album_gallery_attachment_exclusion($query->get('meta_query')));
+      }
+
+      if (!class_exists('eml') && !function_exists( 'wpuxss_get_eml_slug' ) && $this->is_ajax_query_attachments_request()) {
+        add_filter( 'posts_groupby', array($this, 'group_attachments') );
+      }
     }
     return $query;
+  }
+
+  public function exclude_album_gallery_attachments_from_media_library($args) {
+    if (!is_admin()) {
+      return $args;
+    }
+
+    if ($this->media_library_folders_pro_is_filtering_media()) {
+      return $args;
+    }
+
+    return $this->add_album_gallery_attachment_exclusion($args);
+  }
+
+  private function is_media_library_attachment_request($query = null) {
+    if (!is_admin()) {
+      return false;
+    }
+
+    $post_type = is_object($query) ? $query->get('post_type') : '';
+    if (is_array($post_type)) {
+      if (!in_array('attachment', $post_type, true)) {
+        return false;
+      }
+    }
+    else if ($post_type !== 'attachment' && $post_type !== '') {
+      return false;
+    }
+
+    global $pagenow;
+
+    if ($pagenow === 'upload.php' || $pagenow === 'media-upload.php') {
+      return true;
+    }
+
+    $action = isset($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';
+    return $pagenow === 'admin-ajax.php' && $action === 'query-attachments';
+  }
+
+  private function is_ajax_query_attachments_request() {
+    global $pagenow;
+
+    $action = isset($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';
+    return $pagenow === 'admin-ajax.php' && $action === 'query-attachments';
+  }
+
+  private function media_library_folders_pro_is_filtering_media() {
+    if (!class_exists('MGMediaLibraryFoldersPro')) {
+      return false;
+    }
+
+    $remove_folder_tree_option = defined('MAXGALLERIA_REMOVE_FT') ? MAXGALLERIA_REMOVE_FT : 'mlf_remove_ft';
+    if (get_option($remove_folder_tree_option, 'off') === 'on') {
+      return false;
+    }
+
+    global $maxgalleria_media_library_pro;
+
+    if (!is_object($maxgalleria_media_library_pro)) {
+      return true;
+    }
+
+    if (isset($maxgalleria_media_library_pro->license_valid)) {
+      return (bool) $maxgalleria_media_library_pro->license_valid;
+    }
+
+    if (method_exists($maxgalleria_media_library_pro, 'is_valid_license')) {
+      return (bool) $maxgalleria_media_library_pro->is_valid_license();
+    }
+
+    return true;
+  }
+
+  private function add_album_gallery_attachment_exclusion($args) {
+    $args['meta_query'] = $this->get_album_gallery_attachment_exclusion(isset($args['meta_query']) ? $args['meta_query'] : array());
+
+    return $args;
+  }
+
+  private function get_album_gallery_attachment_exclusion($meta_query) {
+    $exclude_album_gallery_attachments = array(
+      'key' => 'maxgallery_id',
+      'compare' => 'NOT EXISTS'
+    );
+
+    if (empty($meta_query)) {
+      return array($exclude_album_gallery_attachments);
+    }
+
+    return array(
+      'relation' => 'AND',
+      $meta_query,
+      $exclude_album_gallery_attachments
+    );
   }
     
   public function group_attachments($groupby) {  
@@ -1131,6 +1254,10 @@ class MaxGalleria {
         $image_id = 0;
       
       if($image_id) {
+        if (!$this->can_edit_gallery_attachment($image_id)) {
+          $this->gallery_media_permission_denied();
+        }
+
         $image = get_post($image_id);
         
         $post_alt = get_post_meta($image_id, '_wp_attachment_image_alt', true);
@@ -1195,6 +1322,9 @@ class MaxGalleria {
       
       
       if($image_id != 0) {
+        if (!$this->can_edit_gallery_attachment($image_id)) {
+          $this->gallery_media_permission_denied();
+        }
         
         $temp = array();
         $temp['ID'] = $image_id;
@@ -1233,9 +1363,13 @@ class MaxGalleria {
 
         $html .= '<table id="bulk-edit-table" cellpadding="0" cellspacing="0">' . PHP_EOL;
           foreach ($image_ids_array as $image_id) {
-            if (isset($image_id)) {
-              $image = get_post($image_id);
-                if (isset($image)) {
+	            if (isset($image_id)) {
+	              $image = get_post($image_id);
+	                if (isset($image)) {
+        if (!$this->can_edit_gallery_attachment($image->ID)) {
+          $this->gallery_media_permission_denied();
+        }
+
         $html .= '  <tr>' . PHP_EOL;
         $html .= '	  <td class="thumb">' . PHP_EOL;
         $html .=       wp_get_attachment_image($image->ID, MAXGALLERIA_META_IMAGE_THUMB_SMALL) . PHP_EOL;
@@ -1362,6 +1496,9 @@ class MaxGalleria {
         $i = 0; 
         if(isset($form_data['image-edit-id'])) {
           foreach($form_data['image-edit-id'] as $image_edit_id) {
+            if (!$this->can_edit_gallery_attachment($image_edit_id)) {
+              $this->gallery_media_permission_denied();
+            }
             
             $temp = array();
             $temp['ID'] = sanitize_text_field($image_edit_id);
@@ -1408,6 +1545,9 @@ class MaxGalleria {
         $video_id = 0;
             
       if($video_id  != 0) {
+        if (!$this->can_edit_gallery_attachment($video_id)) {
+          $this->gallery_media_permission_denied();
+        }
         
         $video = get_post($video_id);
         
@@ -1452,6 +1592,9 @@ class MaxGalleria {
         $post_alt = '';
             
       if($video_id != 0) {
+        if (!$this->can_edit_gallery_attachment($video_id)) {
+          $this->gallery_media_permission_denied();
+        }
         
         $video = get_post($video_id);
       
@@ -1497,6 +1640,9 @@ class MaxGalleria {
 					if (isset($video_id)) {
 						$video = get_post($video_id);
 							if (isset($video)) { 
+        if (!$this->can_edit_gallery_attachment($video->ID)) {
+          $this->gallery_media_permission_denied();
+        }
         
 				$html .= '				<tr>' . PHP_EOL;
 				$html .= '					<td class="thumb">' . PHP_EOL;
@@ -1614,6 +1760,10 @@ class MaxGalleria {
           $i = 0;
             
           foreach ($form_data['video-edit-id'] as $video_edit_id) {            
+            if (!$this->can_edit_gallery_attachment($video_edit_id)) {
+              $this->gallery_media_permission_denied();
+            }
+
             // First update the post itself
             $temp = array();
             $temp['ID'] = sanitize_text_field($video_edit_id);
@@ -1669,6 +1819,11 @@ class MaxGalleria {
       // Insert the attachment
       $attachment_id = $thumb_id;
 
+      $attachment = get_post(absint($attachment_id));
+      if (!$attachment || $attachment->post_type !== 'attachment' || !current_user_can('edit_post', $attachment->ID)) {
+        $this->gallery_media_permission_denied();
+      }
+
       // update the partent of the post thumbnail record
       $menu_order = $this->common->get_next_menu_order($gallery->ID);
 
@@ -1713,6 +1868,9 @@ class MaxGalleria {
         $post_id = 0;
       
       if(is_numeric($post_id) && $post_id != 0) {
+        if (!$this->can_edit_maxgallery($post_id)) {
+          $this->gallery_media_permission_denied();
+        }
 
         $gallery = get_post($post_id);
 

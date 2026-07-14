@@ -52,6 +52,7 @@ $options = new MaxGalleryOptions($post->ID);
 <div class="maxgalleria-meta" style="display: none;">
 	<div class="gallery-type">
 		<div align="center">
+			<?php wp_nonce_field('save_new_gallery_type', 'maxgalleria_save_new_gallery_type'); ?>
 			<p><?php esc_html_e('What type of gallery do you want to create?', 'maxgalleria') ?></p>
 			
 			<table>
