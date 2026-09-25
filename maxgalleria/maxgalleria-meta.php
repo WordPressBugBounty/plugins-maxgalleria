@@ -4,10 +4,8 @@ class MaxGalleriaMeta {
 		add_action('add_meta_boxes', array($this, 'add_gallery_meta_boxes'));
 		add_action('save_post', array($this, 'save_gallery_options'), 10, 2);
 		
-    add_action('wp_ajax_nopriv_mg_hide_template_ad', array($this, 'mg_hide_template_ad'));
     add_action('wp_ajax_mg_hide_template_ad', array($this, 'mg_hide_template_ad'));
 			
-    add_action('wp_ajax_nopriv_mg_hide_gallery_ad', array($this, 'mg_hide_gallery_ad'));
     add_action('wp_ajax_mg_hide_gallery_ad', array($this, 'mg_hide_gallery_ad'));
 		
     add_action( 'admin_enqueue_scripts', array($this, 'load_mg_wp_admin_script'));		
@@ -114,28 +112,35 @@ class MaxGalleriaMeta {
 		return current_user_can('edit_post', $post_id);
 	}
 	
+	public function should_show_promotion($option_key) {
+		if (!in_array($option_key, array('show_template_ad', 'show_gallery_ad'), true)) {
+			return false;
+		}
+
+		// Honor existing site-wide dismissals as well as this user's preference.
+		return current_user_can('upload_files')
+			&& get_option($option_key, 'on') === 'on'
+			&& get_user_meta(get_current_user_id(), 'maxgalleria_' . $option_key, true) !== 'off';
+	}
+
+	private function dismiss_promotion($option_key, $nonce_action) {
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to dismiss this promotion.', 'maxgalleria'), '', array('response' => 403));
+		}
+
+		check_ajax_referer($nonce_action, 'nonce');
+		update_user_meta(get_current_user_id(), 'maxgalleria_' . $option_key, 'off');
+		wp_die();
+	}
+
 	public function mg_hide_template_ad() {
-		
-    if ( !wp_verify_nonce( $_POST['nonce'], MG_META_NONCE)) {
-      exit(esc_html__('missing nonce!','maxgalleria'));
-    } 
-		
-    update_option('show_template_ad', "off");
-		
-		die();
+		$this->dismiss_promotion('show_template_ad', 'mg_hide_template_ad');
 	}
-	
+
 	public function mg_hide_gallery_ad() {
-		
-    if ( !wp_verify_nonce( $_POST['nonce'], MG_META_NONCE)) {
-      exit(esc_html__('missing nonce!','maxgalleria'));
-    } 
-		
-    update_option('show_gallery_ad', "off");
-		
-		die();
+		$this->dismiss_promotion('show_gallery_ad', 'mg_hide_gallery_ad');
 	}
-	
+
 }
 
 ?>

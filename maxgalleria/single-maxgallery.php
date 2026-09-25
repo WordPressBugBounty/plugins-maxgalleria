@@ -5,7 +5,11 @@
 		<?php if ($post->post_type == MAXGALLERIA_POST_TYPE) { ?>
 			<div class="mg-container">
 				<h1 class="mg-title"><?php echo esc_html(the_title()) ?></h1>
-				<?php echo do_shortcode('[maxgallery id="' . esc_attr($post->ID) . '"]') ?>
+				<?php if (post_password_required($post)) { ?>
+					<?php echo get_the_password_form($post); ?>
+				<?php } else { ?>
+					<?php echo do_shortcode('[maxgallery id="' . esc_attr($post->ID) . '"]'); ?>
+				<?php } ?>
         <?php         
         if ( function_exists( 'sharing_display' ) ) {          
           echo wp_kses_post(sharing_display()); 

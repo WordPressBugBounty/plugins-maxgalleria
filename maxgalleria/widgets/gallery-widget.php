@@ -231,6 +231,10 @@ class MaxGalleriaGalleryWidget extends WP_Widget {
 		$gallery = get_post($gallery_id);
 		
 		if (isset($gallery) && $gallery->post_status == 'publish') {
+			if (post_password_required($gallery)) {
+				return '<a href="' . esc_url(get_permalink($gallery->ID)) . '">' . esc_html__('Enter password to view gallery', 'maxgalleria') . '</a>';
+			}
+
 			global $maxgalleria;
 			
 			// Check to use defaults

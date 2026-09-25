@@ -53,6 +53,10 @@ class MaxGalleriaShortcodeThumb {
 	}
 	
 	public function get_output($gallery, $attrs) {
+		if (post_password_required($gallery)) {
+			return get_the_password_form($gallery);
+		}
+
 		$options = new MaxGalleryOptions($gallery->ID);
 
 		$url = $attrs['url'] != '' ? $attrs['url'] : get_permalink($gallery->ID);

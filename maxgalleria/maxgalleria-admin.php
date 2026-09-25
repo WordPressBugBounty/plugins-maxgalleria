@@ -60,21 +60,21 @@ class MaxGalleriaAdmin {
 //		$function = array($this, 'add_addon_page');
 //		add_submenu_page($parent_slug, $page_title, $sub_menu_title, $capability, $menu_slug, $function);
 		    		
-		$capability = 'manage_options';
-		$menu_slug = 'mg-admin-notice';
-		$function = array($this, 'set_admin_notice_true');    
-		add_submenu_page($parent_slug, '', '', $capability, $menu_slug, $function);
-        
-		$capability = 'manage_options';
-		$menu_slug = 'mg-review-notice';
-		$function = array($this, 'set_review_notice_true');    
-		add_submenu_page($parent_slug, '', '', $capability, $menu_slug, $function);
-    
-		$capability = 'manage_options';
-		$menu_slug = 'mg-review-later';
-		$function = array($this, 'set_review_notice_true');    
-		add_submenu_page($parent_slug, '', '', $capability, $menu_slug, $function);
-    		
+		$notice_actions = array(
+			'mg-admin-notice'  => 'set_admin_notice_true',
+			'mg-review-notice' => 'set_review_notice_true',
+			'mg-review-later'  => 'set_review_later',
+		);
+
+		foreach ( $notice_actions as $menu_slug => $method ) {
+			$callback = array( $this, $method );
+			$hook = add_submenu_page( $parent_slug, '', '', 'manage_options', $menu_slug, $callback );
+			if ( $hook ) {
+				// Process the action before WordPress outputs the admin header.
+				add_action( 'load-' . $hook, $callback );
+			}
+		}
+
 		do_action(MAXGALLERIA_ACTION_AFTER_ADMIN_MENU_PAGES, $edit_page);
 	}
 
@@ -91,43 +91,31 @@ class MaxGalleriaAdmin {
 	}
   
 	public function set_admin_notice_true() {
-    
-    $current_user_id = get_current_user_id(); 
-    
-    update_user_meta( $current_user_id, MAXGALLERIA_ADMIN_NOTICE, "off" );
-    
-    $request = sanitize_url($_SERVER["HTTP_REFERER"]);
-    
-    echo "<script>window.location.href = '" . esc_url_raw($request) . "'</script>";             
-    
+		$this->update_notice( 'mg-admin-notice', MAXGALLERIA_ADMIN_NOTICE, 'off' );
 	}
-  
+
 	public function set_review_notice_true() {
-    
-    $current_user_id = get_current_user_id(); 
-    
-    update_user_meta( $current_user_id, MAXGALLERIA_REVIEW_NOTICE, "off" );
-    
-    $request = sanitize_url($_SERVER["HTTP_REFERER"]);
-    
-    echo "<script>window.location.href = '" . esc_url_raw($request) . "'</script>";             
-    
+		$this->update_notice( 'mg-review-notice', MAXGALLERIA_REVIEW_NOTICE, 'off' );
 	}
-  
+
 	public function set_review_later() {
-    
-    $current_user_id = get_current_user_id(); 
-    
-    $review_date = date('Y-m-d', strtotime("+14 days"));
-        
-    update_user_meta( $current_user_id, MAXGALLERIA_REVIEW_NOTICE, $review_date );
-    
-    $request = sanitize_url($_SERVER["HTTP_REFERER"]);
-    
-    echo "<script>window.location.href = '" . esc_url_raw($request) . "'</script>";             
-    
+		$review_date = date( 'Y-m-d', strtotime( '+14 days' ) );
+		$this->update_notice( 'mg-review-later', MAXGALLERIA_REVIEW_NOTICE, $review_date );
 	}
-	
+
+	private function update_notice( $action, $meta_key, $value ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to change this notice.', 'maxgalleria' ), '', array( 'response' => 403 ) );
+		}
+
+		check_admin_referer( $action );
+		update_user_meta( get_current_user_id(), $meta_key, $value );
+
+		// Never use the request Referer as script content or a redirect destination.
+		wp_safe_redirect( admin_url( 'edit.php?post_type=' . MAXGALLERIA_POST_TYPE ) );
+		exit;
+	}
+
 	public function add_addon_page($param) {		
 	?>
 

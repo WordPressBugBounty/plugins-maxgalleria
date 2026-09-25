@@ -2,8 +2,8 @@
 Contributors: maxfoundry, AlanP57, arcware, johnbhartley
 Tags: gallery plugin, gallery plugin, best responsive gallery, slick slider
 Requires at least: 3.9
-Tested up to: 7.0.1
-Stable tag: 6.5.3
+Tested up to: 7.1.1
+Stable tag: 6.5.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -175,6 +175,17 @@ MaxGalleria works seamlessly with the plugins [Media Library Folders](https://wo
 
 
 == Changelog ==
+= 6.5.4 =
+* Hardened site-wide settings saves with administrator capability checks, nonce verification, explicit option allowlists, and field validation. Removed anonymous settings-save routes.
+* Made promotion dismissals specific to each user, requiring upload permission and an action-specific nonce. Removed anonymous dismissal routes and preserved existing site-wide dismissals.
+* Allowed users with upload permission to edit, include/exclude, reorder, remove from galleries, and crop gallery images regardless of image ownership. Retained nonce checks and existing permanent-delete permissions.
+* Removed image-import cleanup that could delete existing attachment records without permission. Imports now reuse an image already attached to the destination gallery while preserving separate gallery records that share one physical image file.
+* Fixed password-protected galleries exposing images through gallery and thumbnail shortcodes, the single-gallery template, and sidebar widgets. Locked galleries now show a password form or a link to it; public and password-unlocked galleries continue to display normally.
+* Added authorization in the NextGEN importer: imports now require upload permission, validate that the destination is a MaxGalleria gallery, and check permission to edit it. Creating a new gallery also requires gallery creation permission. Removed anonymous access to the import action.
+* Improved admin notice handling with additional permission checks and request validation.
+* Updated notice redirects for more reliable navigation.
+* Fixed “Maybe Later” to postpone review reminders for 14 days.
+
 = 6.5.3 =
 * Added authorization checks to gallery/media AJAX actions to prevent unauthorized gallery metadata and attachment changes. Thanks to Artus KG for responsibly reporting these issues.
 * Added code to hid album placeholder attachments from the standard WordPress Media Library.

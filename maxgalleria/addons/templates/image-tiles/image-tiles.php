@@ -22,7 +22,6 @@ class MaxGalleriaImageTiles {
 		add_action('save_post', array($this, 'save_gallery_options'), 10, 2);
 		add_action('maxgalleria_template_options', array($this, 'show_template_options'));
 		add_action('wp_ajax_save_image_tiles_defaults', array($this, 'save_image_tiles_defaults'));
-		add_action('wp_ajax_nopriv_save_image_tiles_defaults', array($this, 'save_image_tiles_defaults'));
 	}
 
 	public function save_gallery_options($post_id, $post = null) {
@@ -66,72 +65,72 @@ class MaxGalleriaImageTiles {
 	}
 	
 	public function save_image_tiles_defaults() {
+		MaxGalleriaSettings::authorize_settings_request(array(
+			'action' => 'save_image_tiles_defaults',
+			'name' => 'maxgalleria_save_image_tiles_defaults',
+		));
 		$options = new MaxGalleriaImageTilesOptions();
-		
-		if (isset($_POST) && check_admin_referer($options->nonce_save_image_tiles_defaults['action'], $options->nonce_save_image_tiles_defaults['name'])) {
-			global $maxgalleria;
-			$message = '';
-      
-			foreach ($_POST as $key => $value) {
-				if ($maxgalleria->common->string_starts_with($key, 'maxgallery_')) {
-          
-          switch($key) {
-            
-            case 'maxgallery_thumb_image_class_image_tiles_default':
-            case 'maxgallery_thumb_image_container_class_image_tiles_default':
-            case 'maxgallery_main_class_image_tiles_default':
-              $value = sanitize_html_class($value);
-              break;        
-            
-            case 'maxgallery_style_border_color_default':
-            case 'maxgallery_style_shadow_color_default':
-              $value = sanitize_hex_color($value);
-              $value = $options->validate_hex_color($value);
-              break;    
-                                    
-            case 'maxgallery_next_button_title_image_tiles_default':
-            case 'maxgallery_prev_button_title_image_tiles_default':
-            case 'maxgallery_counter_markup_image_tiles_default':
-            case 'maxgallery_arrow_markup_image_tiles_default':
-              $value = wp_kses_post(stripslashes($value));
-              break;
-            
-            // validation for numberic values
-            case 'maxgallery_style_border_thickness_default':
-            case 'maxgallery_style_border_radius_default':
-            case 'maxgallery_style_shadow_spread_default':
-            case 'maxgallery_style_shadow_blur_default':
-            case 'maxgallery_thumb_columns_image_tiles_default':
-            case 'maxgallery_images_per_page':
-            case 'maxgallery_lazy_load_threshold_image_tiles_default':
-              $value = sanitize_text_field($value);
-              $value = (int) $value;
-              break;
-                        
-            // validation for checkboxes
-            case 'maxgallery_lazy_load_enabled_image_tiles_default':
-            case 'maxgallery_gallery_enabled_image_tiles_default':
-            case 'maxgallery_lightbox_caption_enabled_image_tiles_default':
-            case 'maxgallery_thumb_caption_enabled_image_tiles_default':
-            case 'maxgallery_style_show_border_default':
-              $value = sanitize_text_field($value);
-              $value = $options->on_or_off($value);
-              break;
-                          
-            default:
-              $value = sanitize_text_field($value);
-              break;
-          }
-                    
-					update_option($key, $value);
-				}
-			}
-			
-			$message = 'success';
-			
-			echo esc_html($message);
-			die();
-		}
+		// Only this template's defaults, including supported legacy fields, may be saved.
+		$schema = array(
+			$options->images_per_page_default_key => 'integer',
+			$options->lightbox_caption_enabled_default_key => array('', 'on', 'off'),
+			$options->skin_default_key => array_keys(array_merge($options->new_skins, $options->skins)),
+			$options->thumb_caption_enabled_default_key => array('', 'on', 'off'),
+			$options->thumb_caption_position_default_key => array_keys($options->caption_positions),
+			$options->thumb_click_default_key => array_keys($options->thumb_clicks),
+			$options->thumb_columns_default_key => array_keys($options->thumb_columns),
+			$options->thumb_image_class_default_key => 'class',
+			$options->thumb_image_container_class_default_key => 'class',
+			$options->thumb_image_rel_attribute_default_key => 'text',
+			$options->thumb_shape_default_key => array_keys($options->thumb_shapes),
+			$options->lazy_load_enabled_default_key => array('', 'on', 'off'),
+			$options->lazy_load_threshold_default_key => 'integer',
+			$options->vertical_fit_enabled_default_key => array('', 'on', 'off'),
+			$options->content_click_close_enabled_default_key => array('', 'on', 'off'),
+			$options->bg_click_close_enabled_default_key => array('', 'on', 'off'),
+			$options->close_btn_inside_enabled_default_key => array('', 'on', 'off'),
+			$options->hide_close_btn_enabled_default_key => array('', 'on', 'off'),
+			$options->escape_key_enabled_default_key => array('', 'on', 'off'),
+			$options->align_top_enabled_default_key => array('', 'on', 'off'),
+			$options->fixed_content_position_default_key => array_keys($options->content_positions),
+			$options->zoom_enabled_default_key => array('', 'on', 'off'),
+			$options->main_class_default_key => 'class',
+			$options->easing_type_default_key => array_keys($options->easing_types),
+			$options->zoom_duration_default_key => array_keys($options->zoom_durations),
+			$options->overflow_y_default_key => array_keys($options->overflow_y_settings),
+			$options->retina_enabled_default_key => array('', 'on', 'off'),
+			$options->removal_delay_default_key => 'integer',
+			$options->gallery_enabled_default_key => array('', 'on', 'off'),
+			$options->navigate_by_img_click_enabled_default_key => array('', 'on', 'off'),
+			$options->arrow_markup_default_key => 'html',
+			$options->prev_button_title_default_key => 'html',
+			$options->next_button_title_default_key => 'html',
+			$options->counter_markup_default_key => 'html',
+			$options->sort_order_default_key => array_keys($options->sort_orders),
+			$options->dfactory_lightbox_default_key => array('', 'on', 'off'),
+			$options->ns_show_border_default_key => array('', 'on', 'off'),
+			$options->ns_border_thickness_default_key => array('', '1', '3', '5', '7', '9', '10', '15'),
+			$options->ns_border_color_default_key => 'color',
+			$options->ns_border_radius_default_key => array('0', '10', '20', '30', '40', '50', '60', '70', '80', '90'),
+			$options->ns_shadow_default_key => array('none', 'inside', 'behind', 'color'),
+			$options->ns_shadow_blur_default_key => array('5', '10', '15', '20'),
+			$options->ns_shadow_color_default_key => 'color',
+			$options->ns_shadow_spread_default_key => array('0', '1', '2', '3'),
+			$options->ns_lightbox_close_default_key => array('', '0', '1', '2', '3', '4'),
+			$options->ns_lightbox_arrow_default_key => array('0', '1', '2', '3', '4', '5', '6', '7'),
+			$options->sort_type_default_key => array_keys($options->sort_by),
+			$options->lightbox_skin_default_key => array_keys($options->lightbox_skins),
+			$options->lightbox_effect_default_key => array_keys($options->lightbox_effects),
+			$options->lightbox_kb_nav_default_key => array('', 'on', 'off'),
+			$options->lightbox_img_click_close_default_key => array('', 'on', 'off'),
+			$options->lightbox_overlay_click_close_default_key => array('', 'on', 'off'),
+			$options->lightbox_close_text_default_key => 'text',
+			$options->lightbox_next_text_default_key => 'text',
+			$options->lightbox_prev_text_default_key => 'text',
+			$options->lightbox_error_text_default_key => 'text',
+		);
+		MaxGalleriaSettings::save_allowed_settings($schema, $_POST);
+		wp_die('success');
 	}
 
 	public function enqueue_styles($options) {

@@ -40,7 +40,6 @@ class MaxGalleriaYouTube {
 		add_action('maxgalleria_video_attachment_post_meta', array($this, 'save_video_attachment_post_meta'), 10, 4);
     
 		add_action('wp_ajax_save_youtube_settings', array($this, 'save_youtube_settings'));
-		add_action('wp_ajax_nopriv_save_youtube_settings', array($this, 'save_youtube_settings'));
 	}
   
   public function is_windows() {
@@ -191,26 +190,17 @@ class MaxGalleriaYouTube {
 	}
   
   public function save_youtube_settings() {
+		MaxGalleriaSettings::authorize_settings_request(array(
+			'action' => 'save_youtube_defaults',
+			'name' => 'maxgalleria_save_youtube_defaults',
+		));
 		$options = new MaxGalleriaYoutubeOptions();
-		
-		if (isset($_POST) && check_admin_referer($options->nonce_save_youtube_defaults['action'], $options->nonce_save_youtube_defaults['name'])) {
-			global $maxgalleria;
-			$message = '';
-            
-			foreach ($_POST as $key => $value) {
-				if ($maxgalleria->common->string_starts_with($key, 'maxgallery_')) {        
-          $value = sanitize_text_field($value);
-					update_option($key, $value);
-				}
-			}
-			
-			$message = 'success';
-			
-			echo esc_html($message);
-			die();
-		}
+		MaxGalleriaSettings::save_allowed_settings(array(
+			$options->developer_api_key_key => 'text',
+		), $_POST);
+		wp_die('success');
   }
-    
+
   public function covert_duration_to_time($youtube_time) {
     preg_match_all('/(\d+)/',$youtube_time,$parts);
 

@@ -41,6 +41,10 @@ class MaxGalleriaShortcode {
 		}
     		
 		if (isset($gallery) && $gallery->post_status == 'publish') {
+			if (post_password_required($gallery)) {
+				return get_the_password_form($gallery);
+			}
+
         
       global $wpdb;
       

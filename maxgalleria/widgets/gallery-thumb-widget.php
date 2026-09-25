@@ -25,9 +25,14 @@ class MaxGalleriaGalleryThumbWidget extends WP_Widget {
 		}
 		
 		if (isset($gallery_id) && $gallery_id != '') {
-			$output .= wp_kses_post(apply_filters(MAXGALLERIA_FILTER_GALLERY_WIDGET_BEFORE_THUMB_OUTPUT, '', $gallery_id));
-			$output .= do_shortcode('[maxgallery_thumb id="' . esc_attr($gallery_id) . '" width="' . esc_attr($thumb_width) . '" height="' . esc_attr($thumb_height) . '" url="' . esc_url($url) . '"]');
-			$output .= wp_kses_post(apply_filters(MAXGALLERIA_FILTER_GALLERY_WIDGET_AFTER_THUMB_OUTPUT, '', $gallery_id));
+			$gallery = get_post($gallery_id);
+			if ($gallery && $gallery->post_status === 'publish' && post_password_required($gallery)) {
+				$output .= '<a href="' . esc_url(get_permalink($gallery->ID)) . '">' . esc_html__('Enter password to view gallery', 'maxgalleria') . '</a>';
+			} else {
+				$output .= wp_kses_post(apply_filters(MAXGALLERIA_FILTER_GALLERY_WIDGET_BEFORE_THUMB_OUTPUT, '', $gallery_id));
+				$output .= do_shortcode('[maxgallery_thumb id="' . esc_attr($gallery_id) . '" width="' . esc_attr($thumb_width) . '" height="' . esc_attr($thumb_height) . '" url="' . esc_url($url) . '"]');
+				$output .= wp_kses_post(apply_filters(MAXGALLERIA_FILTER_GALLERY_WIDGET_AFTER_THUMB_OUTPUT, '', $gallery_id));
+			}
 		}
 
 		$output .= wp_kses_post($args['after_widget']);

@@ -1,14 +1,10 @@
 <?php
-global $post;
+global $post, $maxgalleria;
 $options = new MaxGalleryOptions($post->ID);
 
-if(get_option('show_template_ad', "on") === "on")
-  $show_temp_ad = true;
-else
-  $show_temp_ad = false;
+$show_temp_ad = $maxgalleria->meta->should_show_promotion('show_template_ad');
 
 // Get all templates
-global $maxgalleria;
 $all_templates = $maxgalleria->get_template_addons();
 
 // Filter for image templates
@@ -60,7 +56,7 @@ asort($templates);
 		jQuery.ajax({
 			type: "POST",
 			async: true,
-			data: { action: "mg_hide_template_ad",  nonce: "<?php echo wp_create_nonce(MG_META_NONCE); ?>" },
+			data: { action: "mg_hide_template_ad",  nonce: "<?php echo esc_js(wp_create_nonce('mg_hide_template_ad')); ?>" },
 			url: "<?php echo admin_url('admin-ajax.php') ?>",
 			dataType: "html",
 			success: function (data) {

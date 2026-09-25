@@ -8,7 +8,6 @@ class MaxGalleriaNextGen {
 	public function __construct() {
 		// Ajax call for importing a NextGEN gallery
 		add_action('wp_ajax_import_nextgen_gallery', array($this, 'import_nextgen_gallery'));
-		add_action('wp_ajax_nopriv_import_nextgen_gallery', array($this, 'import_nextgen_gallery'));
 		
 		// Ajax call for getting the import percent of a NextGEN gallery
 		add_action('wp_ajax_get_nextgen_import_percent', array($this, 'get_nextgen_import_percent'));
@@ -20,38 +19,55 @@ class MaxGalleriaNextGen {
 	}
 
 	public function import_nextgen_gallery() {
-		global $maxgalleria;
-		$common = $maxgalleria->common;
-		
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to import galleries.', 'maxgalleria'), '', array('response' => 403));
+		}
+
 		if (isset($_POST) && check_admin_referer($this->nonce_nextgen_importer['action'], $this->nonce_nextgen_importer['name'])) {
 			$nextgen_import_count = 0;
 			$maxgalleria_gallery = null;
-			
+
+			switch (isset($_POST['maxgalleria_gallery_where']) && is_string($_POST['maxgalleria_gallery_where']) ? sanitize_key($_POST['maxgalleria_gallery_where']) : '') {
+				case 'existing':
+					$gallery_id = isset($_POST['maxgalleria_gallery_id']) && is_scalar($_POST['maxgalleria_gallery_id']) ? absint($_POST['maxgalleria_gallery_id']) : 0;
+					$maxgalleria_gallery = $gallery_id ? get_post($gallery_id) : null;
+					break;
+				case 'new':
+					$post_type = get_post_type_object(MAXGALLERIA_POST_TYPE);
+					if (!$post_type || !current_user_can($post_type->cap->create_posts)) {
+						wp_die(esc_html__('You do not have permission to create galleries.', 'maxgalleria'), '', array('response' => 403));
+					}
+					// First create the gallery post itself
+					$new_id = wp_insert_post(array('post_title' => sanitize_title($_POST['maxgalleria_gallery_title']), 'post_type' => MAXGALLERIA_POST_TYPE), true);
+					if (is_wp_error($new_id) || !$new_id) {
+						wp_die(esc_html__('Unable to create the destination gallery.', 'maxgalleria'), '', array('response' => 500));
+					}
+
+					// Get the new gallery for the same destination checks.
+					$maxgalleria_gallery = get_post($new_id);
+					break;
+			}
+
+			// A valid nonce does not authorize access to the requested destination.
+			if (!$maxgalleria_gallery || $maxgalleria_gallery->post_type !== MAXGALLERIA_POST_TYPE || !current_user_can('edit_post', $maxgalleria_gallery->ID)) {
+				wp_die(esc_html__('You do not have permission to import into this gallery.', 'maxgalleria'), '', array('response' => 403));
+			}
+
+			if (isset($new_id)) {
+				// Save defaults only after authorizing the new gallery.
+				$options = new MaxGalleryOptions($new_id);
+				add_post_meta($new_id, $options->type_key, 'image', true);
+				add_post_meta($new_id, $options->template_key, 'image-tiles', true);
+
+			}
+
 			$nextgen_gallery_id = sanitize_text_field($_POST['nextgen_gallery_id']);
 			$nextgen_gallery = $this->get_nextgen_gallery($nextgen_gallery_id);
 			$nextgen_gallery_pics = $this->get_nextgen_gallery_pictures($nextgen_gallery_id);
 			$nextgen_gallery_pics_count = $this->get_nextgen_gallery_picture_count($nextgen_gallery_id);
-			
+
 			do_action(MAXGALLERIA_ACTION_BEFORE_NEXTGEN_IMPORT, $nextgen_gallery, $nextgen_gallery_pics, $nextgen_gallery_pics_count);
-			
-			switch (sanitize_text_field($_POST['maxgalleria_gallery_where'])) {
-				case 'existing':
-					$maxgalleria_gallery = get_post(sanitize_text_field($_POST['maxgalleria_gallery_id']));
-					break;
-				case 'new':
-					// First create the gallery post itself
-					$new_id = wp_insert_post(array('post_title' => sanitize_title($_POST['maxgalleria_gallery_title']), 'post_type' => MAXGALLERIA_POST_TYPE));
-					
-					// Then save the gallery type and set template to Image Tiles
-					$options = new MaxGalleryOptions($new_id);
-					add_post_meta($new_id, $options->type_key, 'image', true);
-					add_post_meta($new_id, $options->template_key, 'image-tiles', true);
-					
-					// And finally get the full gallery post back
-					$maxgalleria_gallery = get_post($new_id);
-					break;
-			}
-			
+
 			if (isset($maxgalleria_gallery)) {
 				// Turn number of galleries to process into chunks for progress bar
 				$chunks = ceil(100 / $nextgen_gallery_pics_count) + 1;
@@ -127,8 +143,8 @@ class MaxGalleriaNextGen {
 			do_action(MAXGALLERIA_ACTION_AFTER_NEXTGEN_IMPORT, $nextgen_gallery, $nextgen_gallery_pics, $nextgen_gallery_pics_count);
 			
 			$gallery_edit_url = admin_url('post.php?post=' . $maxgalleria_gallery->ID . '&action=edit');
-			$message = sprintf(__('Successfully imported %d of %d images from NextGEN into the "%s%s%s" gallery.', 'maxgalleria'), $nextgen_import_count, $nextgen_gallery_pics_count, '<a href="' . $gallery_edit_url . '">', $maxgalleria_gallery->post_title, '</a>');
-			echo esc_html($message);
+			$message = sprintf(esc_html__('Successfully imported %d of %d images from NextGEN into the "%s%s%s" gallery.', 'maxgalleria'), $nextgen_import_count, $nextgen_gallery_pics_count, '<a href="' . esc_url($gallery_edit_url) . '">', esc_html($maxgalleria_gallery->post_title), '</a>');
+			echo wp_kses($message, array('a' => array('href' => array())));
 			die();
 		}
 	}

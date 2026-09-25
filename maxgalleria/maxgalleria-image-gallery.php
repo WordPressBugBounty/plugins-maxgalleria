@@ -169,28 +169,10 @@ class MaxGalleriaImageGallery {
 				}
 			}
 
-			// Once the images have been added to the gallery, delete any attachments with menu_order
-			// of zero. The reason is because starting with WP 3.9, when a user adds a new image to
-			// their media library, it automatically attaches to the post behind the scenes. This causes
-			// the images to get added to the gallery twice - once with menu_order of 0 and another with
-			// menu_order equal to whatever the next menu_order is supposed to be. The latter image is
-			// the one we want, which means the image with menu_order of 0 can be safely deleted.
-      
-			$bad_children = get_children(array(
-				'post_parent' => $gallery_id,
-				'post_type' => 'attachment',
-				'post_status' => 'inherit',
-				'menu_order' => 0
-			));
-      
-			$force_delete = true; // Bypass trash and do hard delete
-			foreach ($bad_children as $child) {
-        if($child->ID !== $attachment_id) {
-          $this->mg_delete_attachment($child->ID, $force_delete);
-          delete_post_meta($child->ID, '_wp_trash_meta_status');
-        }
-			}
-      
+      // Do not delete existing gallery attachments based on menu_order. Core uploads
+      // arrive in a separate request, so their order does not prove they are duplicates.
+      // download_image_attach_to_gallery() reuses records already in this gallery.
+
       // cannot use sanitize_url on $_POST['url'] as $_POST['url'] is an array
 			do_action(MAXGALLERIA_ACTION_AFTER_ADD_IMAGES_TO_GALLERY, $gallery_id, $_POST['url']);
 			echo (int) $result;
@@ -362,6 +344,24 @@ class MaxGalleriaImageGallery {
       // the image is already on the site so copy the attachment; code from BDN Duplicate Images plugin      
       $attachment_id = $is_duplicate;
       $attachment = get_post( $attachment_id, ARRAY_A );
+
+      // Core can attach a new upload to this gallery before our import request.
+      // Reuse that record instead of cloning it and deleting the original later.
+      if (absint($attachment['post_parent']) === absint($gallery_id)) {
+        if (!$this->can_edit_gallery_attachment($attachment_id, $gallery_id)) {
+          return 0;
+        }
+
+        if ((int) $attachment['menu_order'] === 0) {
+          $updated = wp_update_post(array('ID' => $attachment_id, 'menu_order' => $menu_order), true);
+          if (is_wp_error($updated) || !$updated) {
+            return 0;
+          }
+        }
+
+        return $attachment_id;
+      }
+
 						
 			if(class_exists("MaxGalleriaMediaLibProS3")) {
 

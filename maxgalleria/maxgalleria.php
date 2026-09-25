@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: MaxGalleria
-Plugin URI: https://maxgalleria.com
+Plugin URI: https://maxgalleria.com 
 Description: The gallery platform for WordPress.
-Version: 6.5.3
+Version: 6.5.4
 Author: Max Foundry
 Author URI: https://maxfoundry.com
 
@@ -330,12 +330,12 @@ class MaxGalleria {
 												            
       $screen = get_current_screen();
 			if($screen->id == 'edit-maxgallery') {              
-				$show_gallery_ad = get_option('show_gallery_ad', "on");
+				$show_gallery_ad = $this->meta->should_show_promotion('show_gallery_ad') ? 'on' : 'off';
 				wp_enqueue_script('maxgalleria-promo', MAXGALLERIA_PLUGIN_URL . '/js/promo.js', array('jquery'));                                    
 				wp_localize_script( 'maxgalleria-promo', 'mg_promo', 
 							array( 'pluginurl' => MAXGALLERIA_PLUGIN_URL,
 									   'show_promo' => $show_gallery_ad,
-									   'nonce' => wp_create_nonce(MG_META_NONCE ),
+									   'nonce' => wp_create_nonce('mg_hide_gallery_ad'),
 									   'admin_url' => admin_url('admin-ajax.php'),
 									   'addon_link' => MG_ADDON_PAGE_LINK,
 									   'carousel_link' => MG_IMAGE_CAROUSEL_LINK,									
@@ -606,7 +606,7 @@ class MaxGalleria {
 	
 	public function set_global_constants() {	
 		define('MAXGALLERIA_VERSION_KEY', 'maxgalleria_version');
-		define('MAXGALLERIA_VERSION_NUM', '6.5.3');
+		define('MAXGALLERIA_VERSION_NUM', '6.5.4');
 		define('MAXGALLERIA_PLUGIN_NAME', trim(dirname(plugin_basename(__FILE__)), '/'));
 		define('MAXGALLERIA_PLUGIN_DIR', WP_PLUGIN_DIR . '/' . MAXGALLERIA_PLUGIN_NAME);
 		define('MAXGALLERIA_PLUGIN_URL', rtrim(plugin_dir_url(__FILE__), '/'));
@@ -702,6 +702,7 @@ class MaxGalleria {
 		add_action('admin_footer', array($this, 'media_button_admin_footer'));
 		add_action('widgets_init', array($this, 'register_widgets'));
 		add_action('after_switch_theme', array($this, 'copy_template'));
+    add_filter('map_meta_cap', array($this, 'map_gallery_image_edit_capabilities'), 10, 4);
     
     if(!defined('ATTACHMENT_QUERY_OFF')) {
       add_filter('ajax_query_attachments_args', array($this, 'exclude_album_gallery_attachments_from_media_library'));
@@ -812,15 +813,36 @@ class MaxGalleria {
       return false;
     }
 
-    if (!current_user_can('edit_post', $attachment->ID)) {
+    $parent_id = $gallery_id ? absint($gallery_id) : absint($attachment->post_parent);
+    if (!$parent_id || absint($attachment->post_parent) !== $parent_id || get_post_type($parent_id) !== MAXGALLERIA_POST_TYPE) {
       return false;
     }
 
-    $parent_id = $gallery_id ? absint($gallery_id) : absint($attachment->post_parent);
+    // Gallery images are shared media: upload permission is sufficient to manage them.
+    if (wp_attachment_is_image($attachment)) {
+      return current_user_can('upload_files');
+    }
 
-    return $parent_id
-      && absint($attachment->post_parent) === $parent_id
+    return current_user_can('edit_post', $attachment->ID)
       && $this->can_edit_maxgallery($parent_id);
+  }
+
+  public function map_gallery_image_edit_capabilities($caps, $cap, $user_id, $args) {
+    // The native attachment editor, crop save, and preview all check edit_post.
+    // Leave deletion and permissions for other media and post types unchanged.
+    if ($cap !== 'edit_post' || empty($args[0])) {
+      return $caps;
+    }
+
+    $attachment = get_post(absint($args[0]));
+    if ($attachment && $attachment->post_type === 'attachment'
+      && wp_attachment_is_image($attachment)
+      && $attachment->post_parent
+      && get_post_type($attachment->post_parent) === MAXGALLERIA_POST_TYPE) {
+      return array('upload_files');
+    }
+
+    return $caps;
   }
 
   private function gallery_media_permission_denied() {
@@ -1054,19 +1076,22 @@ class MaxGalleria {
 //  }
 
     public function mg_review_notice() {
-   if( current_user_can( 'manage_options' ) ) {  ?>
+   if( current_user_can( 'manage_options' ) ) {
+     $dismiss_url = wp_nonce_url( admin_url( 'edit.php?post_type=' . MAXGALLERIA_POST_TYPE . '&page=mg-review-notice' ), 'mg-review-notice' );
+     $later_url = wp_nonce_url( admin_url( 'edit.php?post_type=' . MAXGALLERIA_POST_TYPE . '&page=mg-review-later' ), 'mg-review-later' );
+     ?>
       <div class="updated notice maxgalleria-notice">         
           <div id='maxgallery_logo'></div>
           <div id='maxgalleria-notice-3'><p id='mg-notice-title'><?php esc_html_e( 'Rate us Please!', 'maxgalleria' ); ?></p>
           <p><?php esc_html_e( 'Your rating is the simplest way to support MaxGalleria. We really appreciate it!', 'maxgalleria' ); ?></p>
         
           <ul id="review-notice-links">
-            <li> <span class="dashicons dashicons-smiley"></span><a href="<?php echo admin_url(); ?>edit.php?post_type=maxgallery&page=mg-review-notice"><?php esc_html_e( "I've already left a review", "maxgalleria" ); ?></a></li>
-            <li><span class="dashicons dashicons-calendar-alt"></span><a href="<?php echo admin_url(); ?>edit.php?post_type=maxgallery&page=mg-review-later"><?php esc_html_e( "Maybe Later", "maxgalleria" ); ?></a></li>
+            <li> <span class="dashicons dashicons-smiley"></span><a href="<?php echo esc_url( $dismiss_url ); ?>"><?php esc_html_e( "I've already left a review", "maxgalleria" ); ?></a></li>
+            <li><span class="dashicons dashicons-calendar-alt"></span><a href="<?php echo esc_url( $later_url ); ?>"><?php esc_html_e( "Maybe Later", "maxgalleria" ); ?></a></li>
             <li><span class="dashicons dashicons-external"></span><a target="_blank" href="https://wordpress.org/support/view/plugin-reviews/maxgalleria?filter=5"><?php esc_html_e( "Sure! I'd love to!", "maxgalleria" ); ?></a></li>
           </ul>
           </div>
-          <a class="dashicons dashicons-dismiss close-mg-notice" href="<?php echo admin_url(); ?>edit.php?post_type=maxgallery&page=mg-review-notice"></a>
+          <a class="dashicons dashicons-dismiss close-mg-notice" href="<?php echo esc_url( $dismiss_url ); ?>"></a>
           
       </div>
     <?php     
