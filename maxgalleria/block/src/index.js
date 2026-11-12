@@ -1,10 +1,8 @@
 import { registerBlockType } from '@wordpress/blocks';
 const { __ } = wp.i18n;
 
-// in the terminal, run npm run build to build
-
 registerBlockType( 'maxgalleria/gallery', {
-    title: esc_html__('MaxGalleria Gallery'),
+    title: __( 'MaxGalleria Gallery', 'maxgalleria' ),
     icon: 'format-gallery',
     category: 'embed',
     keywords: [
@@ -21,25 +19,14 @@ registerBlockType( 'maxgalleria/gallery', {
     },  
 
 
-//        source: 'attribute',
-    
-    edit: function({ attributes, setAttributes, className, isSelected }) {
-
-      //var galleryID = props.attributes.content;
-
-    function onChangeContent( newGalleryID ) {
-      console.log('newGalleryID',newGalleryID);
-      setAttributes( { galleryID: newGalleryID } );
+    edit: function({ attributes, setAttributes, className }) {
+    function onChangeContent( event ) {
+      setAttributes( { galleryID: event.target.value } );
     } 
 
-    function getGalleryList(gallery_id) {
+    function getGalleryList() {
       
       return mg_block_info.galleries.map((item, i) => {
-        if(item.id === gallery_id )
-          return (
-            <option key={i} value={item.id} selected="selected">{item.name}</option>
-          )
-        else  
           return (
             <option key={i} value={item.id}>{item.name}</option>
           )
@@ -49,12 +36,12 @@ registerBlockType( 'maxgalleria/gallery', {
     
     return (
       <div className={className}>
-        <div>{ esc_html__( 'MaxGalleria Gallery', 'maxgalleria' ) }</div>
+        <div>{ __( 'MaxGalleria Gallery', 'maxgalleria' ) }</div>
         {mg_block_info.galleries.length == 0
-        ? <div>{ esc_html__( 'No galleries found', 'maxgalleria' ) }</div>
-        : <select onChange={() => onChangeContent(event.target.value)}>
-          <option value="" disabled >{ esc_html__( 'Select a gallery', 'maxgalleria' ) }</option>
-          {getGalleryList(attributes.galleryID)}
+        ? <div>{ __( 'No galleries found', 'maxgalleria' ) }</div>
+        : <select value={attributes.galleryID} onChange={onChangeContent}>
+          <option value="" disabled >{ __( 'Select a gallery', 'maxgalleria' ) }</option>
+          {getGalleryList()}
           </select>
       }
       </div>

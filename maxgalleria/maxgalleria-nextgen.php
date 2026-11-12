@@ -15,7 +15,6 @@ class MaxGalleriaNextGen {
 		
 		// Ajax call for resetting the import percent and count of a NextGEN gallery
 		add_action('wp_ajax_reset_nextgen_import', array($this, 'reset_nextgen_import'));
-		add_action('wp_ajax_nopriv_reset_nextgen_import', array($this, 'reset_nextgen_import'));
 	}
 
 	public function import_nextgen_gallery() {
@@ -158,11 +157,17 @@ class MaxGalleriaNextGen {
 	}
 
 	public function reset_nextgen_import() {
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to reset import progress.', 'maxgalleria'), '', array('response' => 403));
+		}
+
+		check_ajax_referer('reset_nextgen_import', 'nonce');
+
 		update_option('maxgalleria_nextgen_import_count', 0);
 		update_option('maxgalleria_nextgen_import_percent', 0);
 		
 		// No need to echo anything for a return
-		die();
+		wp_die();
 	}
 
 	public function get_nextgen_gallery($id) {

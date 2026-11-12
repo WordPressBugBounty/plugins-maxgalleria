@@ -26,7 +26,10 @@ if ($nextgen->is_nextgen_installed()) {
 			jQuery.ajax({
 				type: "POST",
 				url: "<?php echo admin_url('admin-ajax.php') ?>",
-				data: "action=reset_nextgen_import"
+				data: {
+					action: "reset_nextgen_import",
+					nonce: "<?php echo esc_js(wp_create_nonce('reset_nextgen_import')); ?>"
+				}
 			});
 			
 			// Hide/show message and progress bar

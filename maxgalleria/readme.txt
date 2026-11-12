@@ -2,8 +2,8 @@
 Contributors: maxfoundry, AlanP57, arcware, johnbhartley
 Tags: gallery plugin, gallery plugin, best responsive gallery, slick slider
 Requires at least: 3.9
-Tested up to: 7.1.1
-Stable tag: 6.5.4
+Tested up to: 7.1.4
+Stable tag: 6.5.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -175,6 +175,11 @@ MaxGalleria works seamlessly with the plugins [Media Library Folders](https://wo
 
 
 == Changelog ==
+= 6.5.5 =
+* Secured NextGEN import-progress resets with upload permission and an action-specific nonce. Removed the anonymous reset route.
+* Added wp_kses_force_legacy_parser filter
+* Fixed issue with selecting a gallery with the MaxGalleria block
+
 = 6.5.4 =
 * Hardened site-wide settings saves with administrator capability checks, nonce verification, explicit option allowlists, and field validation. Removed anonymous settings-save routes.
 * Made promotion dismissals specific to each user, requiring upload permission and an action-specific nonce. Removed anonymous dismissal routes and preserved existing site-wide dismissals.
